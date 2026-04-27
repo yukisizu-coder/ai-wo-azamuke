@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>AIをあざむけ！</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ========== ホーム画面 ========== -->
+  <div id="screen-home" class="screen active">
+    <div class="home-container">
+      <h1 class="game-title">AIを<br>あざむけ！</h1>
+      <p class="subtitle">お絵かきでAIをだまそう</p>
+      <div class="home-buttons">
+        <button class="btn btn-primary" id="btn-goto-create">ルームを作る</button>
+        <button class="btn btn-secondary" id="btn-goto-join">ルームに参加</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== ルーム作成画面 ========== -->
+  <div id="screen-create" class="screen">
+    <div class="form-container">
+      <h2 class="screen-title">ルームを作る</h2>
+      <div class="form-group">
+        <label>なまえ</label>
+        <input type="text" id="create-name" placeholder="なまえを入力" maxlength="12" />
+      </div>
+      <div class="form-buttons">
+        <button class="btn btn-primary" id="btn-create-room">作成！</button>
+        <button class="btn btn-back" id="btn-back-from-create">← もどる</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== ルーム参加画面 ========== -->
+  <div id="screen-join" class="screen">
+    <div class="form-container">
+      <h2 class="screen-title">ルームに参加</h2>
+      <div class="form-group">
+        <label>なまえ</label>
+        <input type="text" id="join-name" placeholder="なまえを入力" maxlength="12" />
+      </div>
+      <div class="form-group">
+        <label>ルームコード</label>
+        <input type="text" id="join-code" placeholder="4ケタのコード" maxlength="4" style="text-transform:uppercase;" />
+      </div>
+      <div class="form-buttons">
+        <button class="btn btn-primary" id="btn-join-room">参加！</button>
+        <button class="btn btn-back" id="btn-back-from-join">← もどる</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== ロビー画面 ========== -->
+  <div id="screen-lobby" class="screen">
+    <div class="lobby-container">
+      <h2 class="screen-title">ロビー</h2>
+      <div class="room-code-display">
+        <p class="room-code-label">ルームコード</p>
+        <p class="room-code" id="lobby-room-code">----</p>
+        <button class="btn btn-small" id="btn-copy-code">コピー</button>
+      </div>
+
+      <div class="player-list-section">
+        <p class="section-label">プレイヤー</p>
+        <ul id="lobby-player-list"></ul>
+      </div>
+
+      <!-- ホスト専用設定 -->
+      <div id="host-settings" class="host-settings hidden">
+        <p class="section-label">ゲーム設定</p>
+        <div class="setting-row">
+          <label>ラウンド数</label>
+          <select id="setting-rounds">
+            <option value="3">3ラウンド</option>
+            <option value="5" selected>5ラウンド</option>
+            <option value="8">8ラウンド</option>
+            <option value="10">10ラウンド</option>
+          </select>
+        </div>
+        <div class="setting-row">
+          <label>AIの難易度</label>
+          <select id="setting-difficulty">
+            <option value="easy">🟢 ゆるい（まちがえやすい）</option>
+            <option value="normal" selected>🟡 ふつう</option>
+            <option value="hard">🔴 きびしい（めちゃ賢い）</option>
+          </select>
+        </div>
+        <button class="btn btn-primary btn-large" id="btn-start-game">ゲームスタート！</button>
+      </div>
+      <div id="guest-waiting" class="hidden">
+        <p class="waiting-text">ホストがゲームを開始するのを待っています...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== ゲーム画面 ========== -->
+  <div id="screen-game" class="screen">
+
+    <!-- ラウンド情報バー -->
+    <div class="game-header">
+      <span id="round-info">ラウンド 1/5</span>
+      <span id="phase-info">準備中</span>
+    </div>
+
+    <!-- カテゴリ選択フェーズ（描き手のみ） -->
+    <div id="phase-category" class="phase-panel hidden">
+      <h3>カテゴリを選んでね！</h3>
+      <div id="category-grid" class="category-grid"></div>
+    </div>
+
+    <!-- お題選択フェーズ（描き手のみ） -->
+    <div id="phase-word-select" class="phase-panel hidden">
+      <h3>お題を選んでね！</h3>
+      <p class="hint-text">このお題を絵で描いてね。AIには内緒だよ！</p>
+      <div id="word-choices" class="word-choices"></div>
+    </div>
+
+    <!-- お題表示（描き手のみ） -->
+    <div id="current-word-display" class="current-word-display hidden">
+      <span>お題：</span><strong id="current-word-text"></strong>
+    </div>
+
+    <!-- 観戦中メッセージ（描き手以外） -->
+    <div id="phase-watching" class="phase-panel hidden">
+      <p id="watching-message" class="watching-message"></p>
+    </div>
+
+    <!-- キャンバスエリア -->
+    <div id="canvas-area" class="canvas-area hidden">
+      <canvas id="game-canvas"></canvas>
+
+      <!-- 描画ツール（描き手のみ） -->
+      <div id="draw-tools" class="draw-tools hidden">
+        <div class="tool-row">
+          <div class="color-palette">
+            <button class="color-btn active" data-color="#1B2A4A" style="background:#1B2A4A;"></button>
+            <button class="color-btn" data-color="#C4622D" style="background:#C4622D;"></button>
+            <button class="color-btn" data-color="#B83232" style="background:#B83232;"></button>
+            <button class="color-btn" data-color="#2D6E6E" style="background:#2D6E6E;"></button>
+            <button class="color-btn" data-color="#8B5E3C" style="background:#8B5E3C;"></button>
+            <button class="color-btn" data-color="#C9960C" style="background:#C9960C;"></button>
+            <button class="color-btn" data-color="#5B3A6B" style="background:#5B3A6B;"></button>
+            <button class="color-btn" data-color="#F2E8D9" style="background:#F2E8D9; border:2px solid #8B5E3C;"></button>
+          </div>
+          <div class="size-btns">
+            <button class="size-btn active" data-size="3">S</button>
+            <button class="size-btn" data-size="7">M</button>
+            <button class="size-btn" data-size="14">L</button>
+          </div>
+          <button class="btn-tool" id="btn-eraser">消</button>
+          <button class="btn-tool btn-danger" id="btn-clear">全消</button>
+        </div>
+        <button class="btn btn-primary btn-ok" id="btn-ok">OK！描けた！</button>
+      </div>
+    </div>
+
+    <!-- AI判定フェーズ -->
+    <div id="phase-ai" class="phase-panel hidden">
+      <div class="ai-thinking">
+        <div class="ai-icon">🤖</div>
+        <p id="ai-thinking-text">AIが絵を分析中...</p>
+        <div class="dots"><span>.</span><span>.</span><span>.</span></div>
+      </div>
+    </div>
+
+    <!-- AI結果表示 -->
+    <div id="phase-ai-result" class="phase-panel hidden">
+      <div class="ai-result-box">
+        <p class="ai-label">AIの答え</p>
+        <p class="ai-answer" id="ai-answer-text"></p>
+        <p class="ai-verdict" id="ai-verdict"></p>
+      </div>
+    </div>
+
+    <!-- 人間の回答フェーズ -->
+    <div id="phase-human" class="phase-panel hidden">
+      <div class="human-guess-area">
+        <p id="human-guess-label" class="human-guess-label"></p>
+        <div id="guess-input-area" class="guess-input-area hidden">
+          <input type="text" id="guess-input" placeholder="答えを入力" maxlength="20" />
+          <button class="btn btn-primary" id="btn-submit-guess">回答！</button>
+        </div>
+        <div id="guess-log" class="guess-log"></div>
+      </div>
+    </div>
+
+    <!-- ラウンド結果 -->
+    <div id="phase-round-result" class="phase-panel hidden">
+      <div class="round-result-box">
+        <p class="result-winner" id="result-winner-text"></p>
+        <p class="result-word">正解は「<strong id="result-word"></strong>」でした！</p>
+        <div class="score-list" id="round-score-list"></div>
+        <button class="btn btn-primary btn-large" id="btn-next-round" style="display:none;">次のラウンドへ →</button>
+        <button class="btn btn-primary btn-large" id="btn-to-gameover" style="display:none;">結果を見る！</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ========== ゲームオーバー画面 ========== -->
+  <div id="screen-gameover" class="screen">
+    <div class="gameover-container">
+      <h2 class="gameover-title">ゲーム終了！</h2>
+      <div class="final-scores" id="final-score-list"></div>
+      <button class="btn btn-primary btn-large" id="btn-play-again">もう一度！</button>
+    </div>
+  </div>
+
+  <!-- エラートースト -->
+  <div id="error-toast" class="error-toast hidden"></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>

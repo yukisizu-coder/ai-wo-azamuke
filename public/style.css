@@ -1,0 +1,892 @@
+/* =====================================
+   カラーパレット（70年代レトロ）
+===================================== */
+:root {
+  --cream:    #F2E8D9;
+  --navy:     #1B2A4A;
+  --orange:   #C4622D;
+  --red:      #B83232;
+  --teal:     #2D6E6E;
+  --brown:    #8B5E3C;
+  --mustard:  #C9960C;
+  --purple:   #5B3A6B;
+  --light:    #FAF4EA;
+  --dark:     #0F1A2E;
+  --shadow:   rgba(27, 42, 74, 0.3);
+}
+
+/* =====================================
+   基本リセット
+===================================== */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: 'Noto Sans JP', sans-serif;
+  background-color: var(--cream);
+  background-image:
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 20px,
+      rgba(196, 98, 45, 0.04) 20px,
+      rgba(196, 98, 45, 0.04) 40px
+    );
+  color: var(--navy);
+  min-height: 100vh;
+}
+
+/* =====================================
+   画面管理
+===================================== */
+.screen {
+  display: none;
+  width: 100%;
+  height: 100vh;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.screen.active {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* =====================================
+   タイトル
+===================================== */
+.game-title {
+  font-family: 'Press Start 2P', cursive;
+  font-size: clamp(20px, 5vw, 40px);
+  color: var(--navy);
+  text-align: center;
+  line-height: 1.8;
+  text-shadow:
+    4px 4px 0px var(--orange),
+    8px 8px 0px var(--brown);
+  margin-bottom: 16px;
+}
+
+.subtitle {
+  font-family: 'Press Start 2P', cursive;
+  font-size: clamp(8px, 2vw, 12px);
+  color: var(--brown);
+  text-align: center;
+  margin-bottom: 40px;
+  letter-spacing: 2px;
+}
+
+.home-container {
+  text-align: center;
+  padding: 20px;
+  max-width: 480px;
+  width: 100%;
+}
+
+.home-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+}
+
+/* =====================================
+   ボタン
+===================================== */
+.btn {
+  font-family: 'Press Start 2P', cursive;
+  font-size: clamp(9px, 2vw, 13px);
+  padding: 14px 28px;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: transform 0.1s, box-shadow 0.1s;
+  letter-spacing: 1px;
+  width: 100%;
+  max-width: 300px;
+}
+
+.btn:active {
+  transform: translateY(3px);
+  box-shadow: none !important;
+}
+
+.btn-primary {
+  background-color: var(--orange);
+  color: var(--cream);
+  box-shadow: 0 5px 0 var(--brown);
+}
+
+.btn-primary:hover {
+  background-color: #d4722d;
+}
+
+.btn-secondary {
+  background-color: var(--navy);
+  color: var(--cream);
+  box-shadow: 0 5px 0 var(--dark);
+}
+
+.btn-secondary:hover {
+  background-color: #243660;
+}
+
+.btn-back {
+  background: transparent;
+  color: var(--brown);
+  font-size: 10px;
+  box-shadow: none;
+  max-width: 200px;
+  text-decoration: underline;
+}
+
+.btn-small {
+  font-size: 8px;
+  padding: 6px 12px;
+  max-width: 120px;
+  background-color: var(--teal);
+  color: var(--cream);
+  box-shadow: 0 3px 0 #1a4040;
+}
+
+.btn-large {
+  font-size: clamp(10px, 2.5vw, 14px);
+  padding: 16px 32px;
+}
+
+.btn-ok {
+  width: 100%;
+  max-width: none;
+  margin-top: 12px;
+  background-color: var(--red);
+  box-shadow: 0 5px 0 #7a1f1f;
+  font-size: clamp(11px, 2.5vw, 16px);
+}
+
+.btn-ok:hover {
+  background-color: #c84040;
+}
+
+/* =====================================
+   フォーム
+===================================== */
+.form-container {
+  background: var(--light);
+  border: 4px solid var(--navy);
+  border-radius: 8px;
+  padding: 32px 28px;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: 8px 8px 0 var(--navy);
+}
+
+.screen-title {
+  font-family: 'Press Start 2P', cursive;
+  font-size: clamp(12px, 3vw, 18px);
+  color: var(--navy);
+  margin-bottom: 28px;
+  text-align: center;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 10px;
+  color: var(--brown);
+  display: block;
+  margin-bottom: 8px;
+}
+
+.form-group input {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 13px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 3px solid var(--navy);
+  border-radius: 4px;
+  background: var(--cream);
+  color: var(--navy);
+  outline: none;
+}
+
+.form-group input:focus {
+  border-color: var(--orange);
+  background: white;
+}
+
+.form-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  margin-top: 8px;
+}
+
+/* =====================================
+   ロビー
+===================================== */
+.lobby-container {
+  max-width: 500px;
+  width: 100%;
+  padding: 10px;
+}
+
+.room-code-display {
+  background: var(--navy);
+  color: var(--cream);
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  margin-bottom: 20px;
+  border: 3px solid var(--orange);
+}
+
+.room-code-label {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 9px;
+  color: var(--mustard);
+  margin-bottom: 8px;
+}
+
+.room-code {
+  font-family: 'Press Start 2P', cursive;
+  font-size: clamp(28px, 8vw, 48px);
+  color: var(--cream);
+  letter-spacing: 12px;
+  margin-bottom: 12px;
+}
+
+.section-label {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 9px;
+  color: var(--brown);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+
+.player-list-section {
+  background: var(--light);
+  border: 3px solid var(--navy);
+  border-radius: 6px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+#lobby-player-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+#lobby-player-list li {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 11px;
+  padding: 8px 12px;
+  background: var(--cream);
+  border-radius: 4px;
+  border-left: 4px solid var(--orange);
+  color: var(--navy);
+}
+
+#lobby-player-list li.host::after {
+  content: " 👑";
+}
+
+.host-settings {
+  background: var(--light);
+  border: 3px solid var(--navy);
+  border-radius: 6px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.setting-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.setting-row label {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 9px;
+  color: var(--brown);
+}
+
+.setting-row select {
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 13px;
+  padding: 8px 10px;
+  border: 3px solid var(--navy);
+  border-radius: 4px;
+  background: var(--cream);
+  color: var(--navy);
+}
+
+.waiting-text {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 9px;
+  color: var(--brown);
+  text-align: center;
+  line-height: 2;
+  padding: 16px;
+}
+
+/* =====================================
+   ゲームヘッダー
+===================================== */
+#screen-game {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 8px;
+}
+
+#screen-game.active {
+  display: flex;
+}
+
+.game-header {
+  width: 100%;
+  max-width: 700px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--navy);
+  color: var(--cream);
+  padding: 8px 16px;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  border: 2px solid var(--orange);
+}
+
+.game-header span {
+  font-family: 'Press Start 2P', cursive;
+  font-size: clamp(7px, 1.8vw, 11px);
+}
+
+/* =====================================
+   フェーズパネル
+===================================== */
+.phase-panel {
+  width: 100%;
+  max-width: 700px;
+  background: var(--light);
+  border: 3px solid var(--navy);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.phase-panel h3 {
+  font-family: 'Press Start 2P', cursive;
+  font-size: clamp(11px, 2.5vw, 15px);
+  color: var(--navy);
+  margin-bottom: 16px;
+}
+
+.hint-text {
+  font-size: 12px;
+  color: var(--brown);
+  margin-bottom: 12px;
+}
+
+/* =====================================
+   カテゴリグリッド
+===================================== */
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+}
+
+.category-btn {
+  font-family: 'Press Start 2P', cursive;
+  font-size: clamp(7px, 1.8vw, 10px);
+  padding: 12px 8px;
+  background: var(--cream);
+  border: 3px solid var(--navy);
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--navy);
+  transition: all 0.15s;
+  line-height: 1.6;
+}
+
+.category-btn:hover {
+  background: var(--orange);
+  color: var(--cream);
+  border-color: var(--brown);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 0 var(--brown);
+}
+
+/* =====================================
+   お題選択
+===================================== */
+.word-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.word-btn {
+  font-family: 'Press Start 2P', cursive;
+  font-size: clamp(13px, 3vw, 18px);
+  padding: 16px;
+  background: var(--cream);
+  border: 3px solid var(--navy);
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--navy);
+  transition: all 0.15s;
+}
+
+.word-btn:hover {
+  background: var(--mustard);
+  color: var(--navy);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 0 var(--brown);
+}
+
+/* =====================================
+   現在のお題表示（描き手）
+===================================== */
+.current-word-display {
+  width: 100%;
+  max-width: 700px;
+  background: var(--mustard);
+  border: 3px solid var(--brown);
+  border-radius: 6px;
+  padding: 10px 16px;
+  margin-bottom: 8px;
+  font-family: 'Press Start 2P', cursive;
+  font-size: clamp(10px, 2.5vw, 14px);
+  color: var(--navy);
+  text-align: center;
+}
+
+.current-word-display strong {
+  font-size: clamp(14px, 3.5vw, 20px);
+  color: var(--red);
+  margin-left: 8px;
+}
+
+/* =====================================
+   観戦メッセージ
+===================================== */
+.watching-message {
+  font-family: 'Press Start 2P', cursive;
+  font-size: clamp(9px, 2vw, 13px);
+  color: var(--navy);
+  line-height: 2;
+}
+
+/* =====================================
+   キャンバスエリア
+===================================== */
+.canvas-area {
+  width: 100%;
+  max-width: 700px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#game-canvas {
+  background: white;
+  border: 4px solid var(--navy);
+  border-radius: 4px;
+  cursor: crosshair;
+  touch-action: none;
+  max-width: 100%;
+  box-shadow: 6px 6px 0 var(--navy);
+  display: block;
+}
+
+.draw-tools {
+  width: 100%;
+  margin-top: 10px;
+  background: var(--navy);
+  border-radius: 6px;
+  padding: 12px;
+}
+
+.tool-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.color-palette {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.color-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+
+.color-btn.active,
+.color-btn:hover {
+  border-color: var(--cream);
+  transform: scale(1.2);
+}
+
+.size-btns {
+  display: flex;
+  gap: 4px;
+}
+
+.size-btn {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 9px;
+  width: 32px;
+  height: 32px;
+  background: var(--cream);
+  color: var(--navy);
+  border: 2px solid var(--cream);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.size-btn.active {
+  background: var(--orange);
+  color: var(--cream);
+}
+
+.btn-tool {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 9px;
+  padding: 6px 10px;
+  background: var(--teal);
+  color: var(--cream);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-danger {
+  background: var(--red);
+}
+
+/* =====================================
+   AI判定フェーズ
+===================================== */
+.ai-thinking {
+  padding: 20px;
+}
+
+.ai-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+  animation: bounce 1s infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+#ai-thinking-text {
+  font-family: 'Press Start 2P', cursive;
+  font-size: clamp(9px, 2vw, 12px);
+  color: var(--navy);
+  margin-bottom: 12px;
+}
+
+.dots span {
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--orange);
+  animation: blink 1.2s infinite;
+}
+
+.dots span:nth-child(2) { animation-delay: 0.2s; }
+.dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes blink {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 1; }
+}
+
+.ai-result-box {
+  padding: 10px;
+}
+
+.ai-label {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 10px;
+  color: var(--brown);
+  margin-bottom: 10px;
+}
+
+.ai-answer {
+  font-family: 'Press Start 2P', cursive;
+  font-size: clamp(20px, 5vw, 32px);
+  color: var(--navy);
+  margin-bottom: 12px;
+}
+
+.ai-verdict {
+  font-family: 'Press Start 2P', cursive;
+  font-size: clamp(13px, 3vw, 18px);
+}
+
+.ai-verdict.correct {
+  color: var(--red);
+}
+
+.ai-verdict.wrong {
+  color: var(--teal);
+}
+
+/* =====================================
+   人間の回答フェーズ
+===================================== */
+.human-guess-area {
+  padding: 10px;
+}
+
+.human-guess-label {
+  font-family: 'Press Start 2P', cursive;
+  font-size: clamp(9px, 2vw, 12px);
+  color: var(--navy);
+  margin-bottom: 16px;
+  line-height: 2;
+}
+
+.guess-input-area {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.guess-input-area input {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 13px;
+  flex: 1;
+  min-width: 160px;
+  padding: 10px 12px;
+  border: 3px solid var(--navy);
+  border-radius: 4px;
+  background: var(--cream);
+  color: var(--navy);
+  outline: none;
+}
+
+.guess-input-area input:focus {
+  border-color: var(--orange);
+}
+
+.guess-input-area .btn {
+  max-width: 120px;
+}
+
+.guess-log {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.guess-item {
+  font-family: 'Press Start 2P', cursive;
+  font-size: clamp(8px, 1.8vw, 11px);
+  padding: 8px 12px;
+  border-radius: 4px;
+  text-align: left;
+}
+
+.guess-item.correct {
+  background: #d4f5e2;
+  border-left: 4px solid var(--teal);
+  color: var(--teal);
+}
+
+.guess-item.wrong {
+  background: #fde8e8;
+  border-left: 4px solid var(--red);
+  color: var(--red);
+}
+
+/* =====================================
+   ラウンド結果
+===================================== */
+.round-result-box {
+  padding: 10px;
+}
+
+.result-winner {
+  font-family: 'Press Start 2P', cursive;
+  font-size: clamp(16px, 4vw, 24px);
+  margin-bottom: 12px;
+  animation: pop 0.4s ease;
+}
+
+.result-winner.human-win { color: var(--teal); }
+.result-winner.ai-win    { color: var(--red); }
+.result-winner.draw      { color: var(--mustard); }
+
+@keyframes pop {
+  0%   { transform: scale(0.5); opacity: 0; }
+  80%  { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.result-word {
+  font-size: 14px;
+  color: var(--navy);
+  margin-bottom: 16px;
+}
+
+.score-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.score-item {
+  font-family: 'Press Start 2P', cursive;
+  font-size: clamp(9px, 2vw, 12px);
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: var(--cream);
+  border-radius: 4px;
+  border-left: 4px solid var(--orange);
+}
+
+/* =====================================
+   ゲームオーバー
+===================================== */
+.gameover-container {
+  text-align: center;
+  max-width: 500px;
+  width: 100%;
+  padding: 20px;
+}
+
+.gameover-title {
+  font-family: 'Press Start 2P', cursive;
+  font-size: clamp(16px, 4vw, 28px);
+  color: var(--navy);
+  text-shadow: 4px 4px 0 var(--orange);
+  margin-bottom: 30px;
+}
+
+.final-scores {
+  background: var(--light);
+  border: 4px solid var(--navy);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 24px;
+  box-shadow: 6px 6px 0 var(--navy);
+}
+
+.final-score-item {
+  font-family: 'Press Start 2P', cursive;
+  font-size: clamp(10px, 2.5vw, 14px);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+  background: var(--cream);
+}
+
+.final-score-item:first-child {
+  background: var(--mustard);
+  color: var(--navy);
+  font-size: clamp(12px, 3vw, 16px);
+}
+
+.final-score-item .rank {
+  color: var(--brown);
+  margin-right: 10px;
+}
+
+/* =====================================
+   エラートースト
+===================================== */
+.error-toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--red);
+  color: var(--cream);
+  font-family: 'Press Start 2P', cursive;
+  font-size: 10px;
+  padding: 14px 20px;
+  border-radius: 6px;
+  z-index: 9999;
+  text-align: center;
+  max-width: 90vw;
+  box-shadow: 4px 4px 0 #7a1f1f;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateX(-50%) translateY(20px); opacity: 0; }
+  to   { transform: translateX(-50%) translateY(0);    opacity: 1; }
+}
+
+/* =====================================
+   レスポンシブ
+===================================== */
+@media (max-width: 480px) {
+  .phase-panel {
+    padding: 12px;
+  }
+
+  .category-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .tool-row {
+    gap: 5px;
+  }
+
+  .color-btn {
+    width: 24px;
+    height: 24px;
+  }
+
+  .game-header {
+    padding: 6px 10px;
+  }
+}
