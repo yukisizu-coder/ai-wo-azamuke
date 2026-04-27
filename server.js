@@ -12,7 +12,26 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.css')) res.set('Content-Type', 'text/css');
+    else if (filePath.endsWith('.js')) res.set('Content-Type', 'application/javascript');
+    else if (filePath.endsWith('.html')) res.set('Content-Type', 'text/html');
+  }
+}));
+
+// 明示的なルート（念のため）
+app.get('/style.css', (req, res) => {
+  res.type('text/css');
+  res.sendFile(path.join(__dirname, 'public', 'style.css'));
+});
+app.get('/game.js', (req, res) => {
+  res.type('application/javascript');
+  res.sendFile(path.join(__dirname, 'public', 'game.js'));
+});
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 // =====================================
 // お題リスト
