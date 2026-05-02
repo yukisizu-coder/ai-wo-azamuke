@@ -91,6 +91,15 @@
             <option value="hard">🔴 きびしい（めちゃ賢い）</option>
           </select>
         </div>
+        <div class="setting-row">
+          <label>描画時間</label>
+          <select id="setting-drawtime">
+            <option value="0">⏳ なし（無制限）</option>
+            <option value="60" selected>⏱️ 60秒</option>
+            <option value="40">⏱️ 40秒</option>
+            <option value="20">⏱️ 20秒（超ハード！）</option>
+          </select>
+        </div>
         <button class="btn btn-primary btn-large" id="btn-start-game">ゲームスタート！</button>
       </div>
       <div id="guest-waiting" class="hidden">
@@ -106,6 +115,7 @@
     <div class="game-header">
       <span id="round-info">ラウンド 1/5</span>
       <span id="phase-info">準備中</span>
+      <span id="timer-display"></span>
     </div>
 
     <!-- カテゴリ選択フェーズ（描き手のみ） -->
@@ -170,6 +180,15 @@
           <button class="btn-tool btn-danger" id="btn-clear">全消</button>
         </div>
         <button class="btn btn-primary btn-ok" id="btn-ok">OK！描けた！</button>
+      </div>
+    </div>
+
+    <!-- チャットエリア（描画中・回答中に表示） -->
+    <div id="chat-area" class="chat-area hidden">
+      <div id="chat-messages" class="chat-messages"></div>
+      <div class="chat-input-row">
+        <input type="text" id="chat-input" placeholder="コメントしよう！（最大30文字）" maxlength="30" />
+        <button id="btn-chat-send" class="btn-chat-send">💬</button>
       </div>
     </div>
 
@@ -245,6 +264,8 @@
         <p class="result-winner" id="result-winner-text"></p>
         <p class="result-word">正解は「<strong id="result-word"></strong>」でした！</p>
         <div class="score-list" id="round-score-list"></div>
+        <!-- ギャラリー -->
+        <div id="round-gallery" class="round-gallery hidden"></div>
         <button class="btn btn-primary btn-large" id="btn-next-round" style="display:none;">次のラウンドへ →</button>
         <button class="btn btn-primary btn-large" id="btn-to-gameover" style="display:none;">結果を見る！</button>
       </div>

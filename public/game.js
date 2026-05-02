@@ -23,6 +23,11 @@ let lastX = 0, lastY = 0;
 let undoHistory = [];
 const MAX_UNDO = 3;
 
+// --- タイマー ---
+let drawTimer = null;
+let drawTimeLeft = 0;
+let currentDrawTime = 0;
+
 // --- AIモノローグ ---
 const aiMonologueWrong = [
   'ぬぬぬ…わからぬ！',
@@ -74,18 +79,18 @@ function soundClick() {
   playTone(900, 0.04, 'square', 0.15);
 }
 
-// AI正解（不気味な勝利ジングル）
+// AI正解
 function soundAIWin() {
   [262, 247, 233, 220].forEach((f, i) => playTone(f, 0.25, 'sawtooth', 0.25, i * 0.18));
   setTimeout(() => playTone(165, 0.6, 'sawtooth', 0.35), 800);
 }
 
-// AI不正解（しょんぼり音）
+// AI不正解
 function soundAILose() {
   [440, 392, 349, 330, 294].forEach((f, i) => playTone(f, 0.2, 'sine', 0.2, i * 0.13));
 }
 
-// 人間正解（ハッピーファンファーレ）
+// 人間正解
 function soundHumanWin() {
   [523, 659, 784, 1047].forEach((f, i) => playTone(f, 0.18, 'square', 0.2, i * 0.1));
   setTimeout(() => {
@@ -93,10 +98,16 @@ function soundHumanWin() {
   }, 500);
 }
 
-// 人間不正解（ブザー音）
+// 人間不正解
 function soundHumanWrong() {
   playTone(180, 0.4, 'sawtooth', 0.25);
   playTone(160, 0.3, 'sawtooth', 0.2, 0.15);
+}
+
+// チャット受信音「ポン」← 追加
+function soundChat() {
+  playTone(880, 0.06, 'sine', 0.2);
+  playTone(1100, 0.05, 'sine', 0.15, 0.06);
 }
 
 // =====================================
@@ -124,7 +135,6 @@ function showError(msg) {
 // =====================================
 document.getElementById('btn-goto-create').addEventListener('click', () => { soundClick(); showScreen('screen-create'); });
 document.getElementById('btn-goto-join').addEventListener('click', () => { soundClick(); showScreen('screen-join'); });
-
 document.getElementById('btn-back-from-create').addEventListener('click', () => { soundClick(); showScreen('screen-home'); });
 document.getElementById('btn-back-from-join').addEventListener('click', () => { soundClick(); showScreen('screen-home'); });
 
@@ -177,7 +187,92 @@ document.getElementById('btn-start-game').addEventListener('click', () => {
   soundClick();
   const difficulty = document.getElementById('setting-difficulty').value;
   const totalRounds = parseInt(document.getElementById('setting-rounds').value);
-  socket.emit('start_game', { difficulty, totalRounds });
+  const drawTime = parseInt(document.getElementById('setting-drawtime').value); // ← 追加
+  socket.emit('start_game', { difficulty, totalRounds, drawTime });
+});
+
+// =====================================
+// タイマー ← 追加
+// =====================================
+function startDrawTimer(seconds) {
+  stopDrawTimer();
+  if (!seconds || seconds <= 0) return;
+  drawTimeLeft = seconds;
+  const el = document.getElementById('timer-display');
+  el.textContent = `⏱️ ${drawTimeLeft}`;
+  el.className = '';
+
+  drawTimer = setInterval(() => {
+    drawTimeLeft--;
+    if (drawTimeLeft <= 0) {
+      stopDrawTimer();
+      el.textContent = '⏱️ 0';
+      // 描き手なら自動でOK送信
+      if (isDrawer) {
+        const okBtn = document.getElementById('btn-ok');
+        if (okBtn && !okBtn.disabled) {
+          okBtn.click();
+        }
+      }
+    } else {
+      el.textContent = `⏱️ ${drawTimeLeft}`;
+      el.className = drawTimeLeft <= 10 ? 'timer-urgent' : '';
+    }
+  }, 1000);
+}
+
+function stopDrawTimer() {
+  clearInterval(drawTimer);
+  drawTimer = null;
+  const el = document.getElementById('timer-display');
+  if (el) { el.textContent = ''; el.className = ''; }
+}
+
+// =====================================
+// チャット ← 追加
+// =====================================
+function showChat(visible) {
+  const area = document.getElementById('chat-area');
+  if (visible) {
+    area.classList.remove('hidden');
+  } else {
+    area.classList.add('hidden');
+  }
+}
+
+function sendChat() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text) return;
+  socket.emit('chat_message', { text });
+  input.value = '';
+}
+
+function addChatBubble(playerId, playerName, text) {
+  const isMe = playerId === socket.id;
+  const messages = document.getElementById('chat-messages');
+  const bubble = document.createElement('div');
+  bubble.className = `chat-bubble ${isMe ? 'mine' : 'others'}`;
+
+  const nameEl = document.createElement('span');
+  nameEl.className = 'chat-name';
+  nameEl.textContent = isMe ? '' : playerName;
+
+  const textEl = document.createElement('span');
+  textEl.className = 'chat-text';
+  textEl.textContent = text;
+
+  bubble.appendChild(nameEl);
+  bubble.appendChild(textEl);
+  messages.appendChild(bubble);
+  messages.scrollTop = messages.scrollHeight;
+
+  if (!isMe) soundChat();
+}
+
+document.getElementById('btn-chat-send').addEventListener('click', sendChat);
+document.getElementById('chat-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') sendChat();
 });
 
 // =====================================
@@ -187,7 +282,6 @@ function initCanvas() {
   canvas = document.getElementById('game-canvas');
   ctx = canvas.getContext('2d');
 
-  // キャンバスサイズを画面に合わせて設定
   function resizeCanvas() {
     const maxW = Math.min(window.innerWidth - 20, 700);
     const w = maxW;
@@ -270,19 +364,14 @@ function draw(e) {
 }
 
 function endDraw() {
-  if (drawing && isDrawer) {
-    // ストローク終了時にキャンバス状態を保存
-    saveUndoState();
-  }
+  if (drawing && isDrawer) saveUndoState();
   drawing = false;
 }
 
 function saveUndoState() {
   if (!canvas) return;
   undoHistory.push(canvas.toDataURL());
-  if (undoHistory.length > MAX_UNDO + 1) {
-    undoHistory.shift(); // 古いものを削除
-  }
+  if (undoHistory.length > MAX_UNDO + 1) undoHistory.shift();
   updateUndoButton();
 }
 
@@ -292,7 +381,6 @@ function updateUndoButton() {
   const canUndo = undoHistory.length > 1;
   btn.disabled = !canUndo;
   btn.style.opacity = canUndo ? '1' : '0.4';
-  // 残り回数表示
   const remaining = Math.max(0, undoHistory.length - 1);
   btn.textContent = `↩ 戻す(${remaining})`;
 }
@@ -366,13 +454,12 @@ document.getElementById('btn-clear').addEventListener('click', () => {
 document.getElementById('btn-undo').addEventListener('click', () => {
   if (!isDrawer) return;
   if (undoHistory.length <= 1) return;
-  undoHistory.pop(); // 現在の状態を捨てる
+  undoHistory.pop();
   const prevState = undoHistory[undoHistory.length - 1];
   const img = new Image();
   img.onload = () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    // 他のプレイヤーにも同期
     socket.emit('draw_event', { type: 'image', data: prevState, cw: canvas.width, ch: canvas.height });
   };
   img.src = prevState;
@@ -384,11 +471,13 @@ document.getElementById('btn-undo').addEventListener('click', () => {
 // =====================================
 document.getElementById('btn-ok').addEventListener('click', () => {
   if (!isDrawer) return;
+  stopDrawTimer(); // ← タイマー停止
   const imageData = canvas.toDataURL('image/png');
   socket.emit('submit_drawing', { imageData });
   document.getElementById('btn-ok').disabled = true;
   document.getElementById('btn-ok').textContent = '送信中...';
   document.getElementById('draw-tools').classList.add('hidden');
+  showChat(false); // ← 描画完了時チャット非表示
 });
 
 // =====================================
@@ -469,6 +558,48 @@ function buildCategoryGrid(categories) {
 }
 
 // =====================================
+// ギャラリー表示 ← 追加
+// =====================================
+function showGallery(galleryData) {
+  const galleryEl = document.getElementById('round-gallery');
+  if (!galleryData || galleryData.length === 0) {
+    galleryEl.classList.add('hidden');
+    return;
+  }
+  galleryEl.innerHTML = '';
+  galleryEl.classList.remove('hidden');
+
+  // タイトル
+  const title = document.createElement('p');
+  title.className = 'round-gallery-title';
+  title.textContent = '✏️ みんなの絵コレクション';
+  galleryEl.appendChild(title);
+
+  galleryData.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'gallery-card';
+
+    const roundLabel = document.createElement('p');
+    roundLabel.className = 'gallery-round';
+    roundLabel.textContent = `R${item.round}`;
+
+    const img = document.createElement('img');
+    img.className = 'gallery-img';
+    img.src = item.imageData;
+    img.alt = `${item.drawerName}の絵`;
+
+    const author = document.createElement('p');
+    author.className = 'gallery-author';
+    author.textContent = `✏️ ${item.drawerName}`;
+
+    card.appendChild(roundLabel);
+    card.appendChild(img);
+    card.appendChild(author);
+    galleryEl.appendChild(card);
+  });
+}
+
+// =====================================
 // Socket イベントハンドラ
 // =====================================
 
@@ -503,10 +634,12 @@ socket.on('player_updated', ({ players }) => {
 });
 
 // ゲーム開始
-socket.on('game_started', ({ difficulty, totalRounds, players }) => {
+socket.on('game_started', ({ difficulty, totalRounds, drawTime, players }) => {
+  currentDrawTime = drawTime || 0;
   initCanvas();
   showScreen('screen-game');
   hideAllPhases();
+  showChat(false);
   document.getElementById('phase-info').textContent = 'まもなく開始';
 });
 
@@ -514,6 +647,8 @@ socket.on('game_started', ({ difficulty, totalRounds, players }) => {
 socket.on('round_started', ({ round, totalRounds, drawerName, drawerId, categories }) => {
   isDrawer = (drawerId === socket.id);
   hasGuessed = false;
+  stopDrawTimer();
+  showChat(false);
 
   document.getElementById('round-info').textContent = `ラウンド ${round}/${totalRounds}`;
   document.getElementById('phase-info').textContent = isDrawer ? 'あなたが描き手！' : `${drawerName} が描いています`;
@@ -526,6 +661,9 @@ socket.on('round_started', ({ round, totalRounds, drawerName, drawerId, categori
   undoHistory = [];
   if (canvas) undoHistory.push(canvas.toDataURL());
   updateUndoButton();
+
+  // チャットをクリア
+  document.getElementById('chat-messages').innerHTML = '';
 
   if (isDrawer) {
     buildCategoryGrid(categories);
@@ -553,8 +691,8 @@ socket.on('word_choices', ({ words, category }) => {
   showPhase('phase-word-select');
 });
 
-// 描画フェーズ開始（描き手）
-socket.on('start_drawing', ({ word, category, round, totalRounds }) => {
+// 描画フェーズ開始（描き手）← drawTime追加
+socket.on('start_drawing', ({ word, category, round, totalRounds, drawTime }) => {
   document.getElementById('current-word-text').textContent = word;
   document.getElementById('current-word-display').classList.remove('hidden');
   document.getElementById('btn-ok').disabled = false;
@@ -565,16 +703,30 @@ socket.on('start_drawing', ({ word, category, round, totalRounds }) => {
   document.getElementById('canvas-area').classList.remove('hidden');
   document.getElementById('current-word-display').classList.remove('hidden');
   document.getElementById('phase-info').textContent = '描いてね！';
+
+  showChat(true); // ← チャット表示
+
+  // タイマー開始 ← 追加
+  if (drawTime && drawTime > 0) {
+    startDrawTimer(drawTime);
+  }
 });
 
-// 描画フェーズ開始（観戦者）
-socket.on('drawing_phase', ({ drawerName, category, round, totalRounds }) => {
+// 描画フェーズ開始（観戦者）← drawTime追加
+socket.on('drawing_phase', ({ drawerName, category, round, totalRounds, drawTime }) => {
   document.getElementById('watching-message').textContent = `${drawerName} が「${category}」から描いています...`;
   hideAllPhases();
   document.getElementById('canvas-area').classList.remove('hidden');
   document.getElementById('phase-watching').classList.remove('hidden');
   document.getElementById('draw-tools').classList.add('hidden');
   document.getElementById('phase-info').textContent = 'みんなで見よう！';
+
+  showChat(true); // ← チャット表示
+
+  // タイマー表示（観戦者は見るだけ）← 追加
+  if (drawTime && drawTime > 0) {
+    startDrawTimer(drawTime);
+  }
 });
 
 // リモート描画
@@ -582,8 +734,15 @@ socket.on('draw_event', (data) => {
   if (!isDrawer) drawRemote(data);
 });
 
+// チャット受信 ← 追加
+socket.on('chat_message', ({ playerId, playerName, text }) => {
+  addChatBubble(playerId, playerName, text);
+});
+
 // AI判定中
 socket.on('ai_guessing', ({ difficulty }) => {
+  stopDrawTimer(); // ← タイマー停止
+  showChat(false); // ← チャット非表示
   const labels = { easy: 'ゆるいAI', normal: 'ふつうAI', hard: 'きびしいAI' };
   document.getElementById('ai-thinking-text').textContent = `${labels[difficulty] || 'AI'} が絵を分析中...`;
   hideAllPhases();
@@ -595,8 +754,6 @@ socket.on('ai_guessing', ({ difficulty }) => {
 socket.on('ai_result', ({ guess, correct, correctWord }) => {
   document.getElementById('ai-answer-text').textContent = `「${guess}」`;
   const verdict = document.getElementById('ai-verdict');
-
-  // 表情とモノローグ
   const eyeL = document.getElementById('result-eye-left');
   const eyeR = document.getElementById('result-eye-right');
   const mouth = document.getElementById('result-mouth');
@@ -651,6 +808,8 @@ socket.on('human_guessing_phase', ({ drawerName, category, players }) => {
   document.getElementById('phase-human').classList.remove('hidden');
   document.getElementById('canvas-area').classList.remove('hidden');
   document.getElementById('phase-info').textContent = '人間が回答中...';
+
+  showChat(true); // ← 回答フェーズもチャット表示
 });
 
 // 誰かが回答した
@@ -665,9 +824,10 @@ socket.on('guess_submitted', ({ playerName, guess, correct }) => {
   log.scrollTop = log.scrollHeight;
 });
 
-// ラウンド終了
-socket.on('round_over', ({ winner, correctWord, aiGuess, scores, round, totalRounds, isLastRound }) => {
-  // 結果テキスト
+// ラウンド終了 ← gallery追加
+socket.on('round_over', ({ winner, correctWord, aiGuess, scores, round, totalRounds, isLastRound, gallery }) => {
+  showChat(false);
+
   const winnerEl = document.getElementById('result-winner-text');
   if (winner === 'human') {
     winnerEl.textContent = '🎉 人間チームの勝ち！';
@@ -691,6 +851,9 @@ socket.on('round_over', ({ winner, correctWord, aiGuess, scores, round, totalRou
     item.innerHTML = `<span>${s.name}</span><span>${s.score}pt</span>`;
     scoreList.appendChild(item);
   });
+
+  // ギャラリー ← 追加
+  showGallery(gallery);
 
   // ボタン制御
   const btnNext = document.getElementById('btn-next-round');
