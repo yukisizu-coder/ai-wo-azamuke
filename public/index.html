@@ -154,6 +154,7 @@
             <button class="size-btn" data-size="14">L</button>
           </div>
           <button class="btn-tool" id="btn-eraser">消</button>
+          <button class="btn-tool btn-undo" id="btn-undo">↩ 戻す</button>
           <button class="btn-tool btn-danger" id="btn-clear">全消</button>
         </div>
         <button class="btn btn-primary btn-ok" id="btn-ok">OK！描けた！</button>
@@ -163,7 +164,24 @@
     <!-- AI判定フェーズ -->
     <div id="phase-ai" class="phase-panel hidden">
       <div class="ai-thinking">
-        <div class="ai-icon">🤖</div>
+        <div class="ai-character">
+          <div class="ai-body">
+            <div class="ai-antenna"><div class="ai-antenna-ball"></div></div>
+            <div class="ai-face">
+              <div class="ai-eye left"></div>
+              <div class="ai-eye right"></div>
+              <div class="ai-mouth"></div>
+            </div>
+            <div class="ai-tentacles">
+              <div class="tentacle t1"></div>
+              <div class="tentacle t2"></div>
+              <div class="tentacle t3"></div>
+              <div class="tentacle t4"></div>
+              <div class="tentacle t5"></div>
+              <div class="tentacle t6"></div>
+            </div>
+          </div>
+        </div>
         <p id="ai-thinking-text">AIが絵を分析中...</p>
         <div class="dots"><span>.</span><span>.</span><span>.</span></div>
       </div>
@@ -172,6 +190,25 @@
     <!-- AI結果表示 -->
     <div id="phase-ai-result" class="phase-panel hidden">
       <div class="ai-result-box">
+        <div class="ai-character small">
+          <div class="ai-body">
+            <div class="ai-antenna"><div class="ai-antenna-ball"></div></div>
+            <div class="ai-face">
+              <div class="ai-eye left" id="result-eye-left"></div>
+              <div class="ai-eye right" id="result-eye-right"></div>
+              <div class="ai-mouth" id="result-mouth"></div>
+            </div>
+            <div class="ai-tentacles">
+              <div class="tentacle t1"></div>
+              <div class="tentacle t2"></div>
+              <div class="tentacle t3"></div>
+              <div class="tentacle t4"></div>
+              <div class="tentacle t5"></div>
+              <div class="tentacle t6"></div>
+            </div>
+          </div>
+        </div>
+        <div class="ai-monologue hidden" id="ai-monologue"></div>
         <p class="ai-label">AIの答え</p>
         <p class="ai-answer" id="ai-answer-text"></p>
         <p class="ai-verdict" id="ai-verdict"></p>

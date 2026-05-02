@@ -19,6 +19,86 @@ let currentSize = 3;
 let isEraser = false;
 let lastX = 0, lastY = 0;
 
+// --- UNDOヒストリー（最大3回分） ---
+let undoHistory = [];
+const MAX_UNDO = 3;
+
+// --- AIモノローグ ---
+const aiMonologueWrong = [
+  'ぬぬぬ…わからぬ！',
+  'これは一体…なんじゃ！？',
+  'むむむ！予測不能な絵じゃ…！',
+  'そ、そんな絵は見たことがない！',
+  'カイロス回路がショートしそう…！',
+  'あ、あわわ…データが足りぬ！',
+  '人間め…なかなかやるな！',
+  'お、おのれ…次は負けんぞ！',
+  'こ、これは…反則だー！！',
+  'ぴぴぴ…エラー！エラー！！',
+];
+
+const aiMonologueCorrect = [
+  'フハハ！お見通しじゃ！',
+  'ふふふ…AIをなめるな！',
+  '計算通り！完璧な分析！',
+  'ピピッ！正解！人間に勝ったぞ！',
+  'AIの目はごまかせないぞ！',
+];
+
+// =====================================
+// 音響効果（Web Audio API）
+// =====================================
+let audioCtx = null;
+function getAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function playTone(freq, dur, type = 'square', vol = 0.25, delay = 0) {
+  try {
+    const ctx = getAudio();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = type;
+    osc.frequency.value = freq;
+    const t = ctx.currentTime + delay;
+    gain.gain.setValueAtTime(vol, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    osc.start(t); osc.stop(t + dur);
+  } catch(e) {}
+}
+
+// ボタンクリック音
+function soundClick() {
+  playTone(900, 0.04, 'square', 0.15);
+}
+
+// AI正解（不気味な勝利ジングル）
+function soundAIWin() {
+  [262, 247, 233, 220].forEach((f, i) => playTone(f, 0.25, 'sawtooth', 0.25, i * 0.18));
+  setTimeout(() => playTone(165, 0.6, 'sawtooth', 0.35), 800);
+}
+
+// AI不正解（しょんぼり音）
+function soundAILose() {
+  [440, 392, 349, 330, 294].forEach((f, i) => playTone(f, 0.2, 'sine', 0.2, i * 0.13));
+}
+
+// 人間正解（ハッピーファンファーレ）
+function soundHumanWin() {
+  [523, 659, 784, 1047].forEach((f, i) => playTone(f, 0.18, 'square', 0.2, i * 0.1));
+  setTimeout(() => {
+    [784, 1047].forEach((f, i) => playTone(f, 0.3, 'square', 0.25, i * 0.15));
+  }, 500);
+}
+
+// 人間不正解（ブザー音）
+function soundHumanWrong() {
+  playTone(180, 0.4, 'sawtooth', 0.25);
+  playTone(160, 0.3, 'sawtooth', 0.2, 0.15);
+}
+
 // =====================================
 // 画面切り替え
 // =====================================
@@ -42,16 +122,17 @@ function showError(msg) {
 // =====================================
 // ホーム画面
 // =====================================
-document.getElementById('btn-goto-create').addEventListener('click', () => showScreen('screen-create'));
-document.getElementById('btn-goto-join').addEventListener('click', () => showScreen('screen-join'));
+document.getElementById('btn-goto-create').addEventListener('click', () => { soundClick(); showScreen('screen-create'); });
+document.getElementById('btn-goto-join').addEventListener('click', () => { soundClick(); showScreen('screen-join'); });
 
-document.getElementById('btn-back-from-create').addEventListener('click', () => showScreen('screen-home'));
-document.getElementById('btn-back-from-join').addEventListener('click', () => showScreen('screen-home'));
+document.getElementById('btn-back-from-create').addEventListener('click', () => { soundClick(); showScreen('screen-home'); });
+document.getElementById('btn-back-from-join').addEventListener('click', () => { soundClick(); showScreen('screen-home'); });
 
 // =====================================
 // ルーム作成
 // =====================================
 document.getElementById('btn-create-room').addEventListener('click', () => {
+  soundClick();
   const name = document.getElementById('create-name').value.trim();
   if (!name) { showError('なまえを入力してね！'); return; }
   myName = name;
@@ -62,6 +143,7 @@ document.getElementById('btn-create-room').addEventListener('click', () => {
 // ルーム参加
 // =====================================
 document.getElementById('btn-join-room').addEventListener('click', () => {
+  soundClick();
   const name = document.getElementById('join-name').value.trim();
   const code = document.getElementById('join-code').value.trim().toUpperCase();
   if (!name) { showError('なまえを入力してね！'); return; }
@@ -92,6 +174,7 @@ document.getElementById('btn-copy-code').addEventListener('click', () => {
 });
 
 document.getElementById('btn-start-game').addEventListener('click', () => {
+  soundClick();
   const difficulty = document.getElementById('setting-difficulty').value;
   const totalRounds = parseInt(document.getElementById('setting-rounds').value);
   socket.emit('start_game', { difficulty, totalRounds });
@@ -187,7 +270,31 @@ function draw(e) {
 }
 
 function endDraw() {
+  if (drawing && isDrawer) {
+    // ストローク終了時にキャンバス状態を保存
+    saveUndoState();
+  }
   drawing = false;
+}
+
+function saveUndoState() {
+  if (!canvas) return;
+  undoHistory.push(canvas.toDataURL());
+  if (undoHistory.length > MAX_UNDO + 1) {
+    undoHistory.shift(); // 古いものを削除
+  }
+  updateUndoButton();
+}
+
+function updateUndoButton() {
+  const btn = document.getElementById('btn-undo');
+  if (!btn) return;
+  const canUndo = undoHistory.length > 1;
+  btn.disabled = !canUndo;
+  btn.style.opacity = canUndo ? '1' : '0.4';
+  // 残り回数表示
+  const remaining = Math.max(0, undoHistory.length - 1);
+  btn.textContent = `↩ 戻す(${remaining})`;
 }
 
 function drawRemote(data) {
@@ -213,6 +320,13 @@ function drawRemote(data) {
   } else if (data.type === 'clear') {
     ctx.fillStyle = 'white';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+  } else if (data.type === 'image') {
+    const img = new Image();
+    img.onload = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    };
+    img.src = data.data;
   }
 }
 
@@ -242,9 +356,27 @@ document.getElementById('btn-eraser').addEventListener('click', () => {
 
 document.getElementById('btn-clear').addEventListener('click', () => {
   if (!isDrawer) return;
+  saveUndoState();
   ctx.fillStyle = 'white';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
+  saveUndoState();
   socket.emit('draw_event', { type: 'clear', cw: canvas.width, ch: canvas.height });
+});
+
+document.getElementById('btn-undo').addEventListener('click', () => {
+  if (!isDrawer) return;
+  if (undoHistory.length <= 1) return;
+  undoHistory.pop(); // 現在の状態を捨てる
+  const prevState = undoHistory[undoHistory.length - 1];
+  const img = new Image();
+  img.onload = () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    // 他のプレイヤーにも同期
+    socket.emit('draw_event', { type: 'image', data: prevState, cw: canvas.width, ch: canvas.height });
+  };
+  img.src = prevState;
+  updateUndoButton();
 });
 
 // =====================================
@@ -386,11 +518,14 @@ socket.on('round_started', ({ round, totalRounds, drawerName, drawerId, categori
   document.getElementById('round-info').textContent = `ラウンド ${round}/${totalRounds}`;
   document.getElementById('phase-info').textContent = isDrawer ? 'あなたが描き手！' : `${drawerName} が描いています`;
 
-  // キャンバスクリア
+  // キャンバスクリア＆UNDOリセット
   if (ctx) {
     ctx.fillStyle = 'white';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
+  undoHistory = [];
+  if (canvas) undoHistory.push(canvas.toDataURL());
+  updateUndoButton();
 
   if (isDrawer) {
     buildCategoryGrid(categories);
@@ -460,13 +595,37 @@ socket.on('ai_guessing', ({ difficulty }) => {
 socket.on('ai_result', ({ guess, correct, correctWord }) => {
   document.getElementById('ai-answer-text').textContent = `「${guess}」`;
   const verdict = document.getElementById('ai-verdict');
+
+  // 表情とモノローグ
+  const eyeL = document.getElementById('result-eye-left');
+  const eyeR = document.getElementById('result-eye-right');
+  const mouth = document.getElementById('result-mouth');
+  const monologue = document.getElementById('ai-monologue');
+
   if (correct) {
     verdict.textContent = '😈 正解！AIの勝ち！';
     verdict.className = 'ai-verdict correct';
+    if (eyeL) { eyeL.className = 'ai-eye left happy'; eyeR.className = 'ai-eye right happy'; }
+    if (mouth) mouth.className = 'ai-mouth happy';
+    if (monologue) {
+      const msg = aiMonologueCorrect[Math.floor(Math.random() * aiMonologueCorrect.length)];
+      monologue.textContent = msg;
+      monologue.classList.remove('hidden');
+    }
+    soundAIWin();
   } else {
     verdict.textContent = '🎉 不正解！人間の番だ！';
     verdict.className = 'ai-verdict wrong';
+    if (eyeL) { eyeL.className = 'ai-eye left sad'; eyeR.className = 'ai-eye right sad'; }
+    if (mouth) mouth.className = 'ai-mouth sad';
+    if (monologue) {
+      const msg = aiMonologueWrong[Math.floor(Math.random() * aiMonologueWrong.length)];
+      monologue.textContent = msg;
+      monologue.classList.remove('hidden');
+    }
+    soundAILose();
   }
+
   hideAllPhases();
   document.getElementById('phase-ai-result').classList.remove('hidden');
   document.getElementById('phase-info').textContent = correct ? 'AIの勝ち！' : 'AIは外した！';
@@ -501,6 +660,8 @@ socket.on('guess_submitted', ({ playerName, guess, correct }) => {
   item.className = `guess-item ${correct ? 'correct' : 'wrong'}`;
   item.textContent = `${playerName}：「${guess}」 ${correct ? '✓ 正解！' : '✗ 不正解'}`;
   log.appendChild(item);
+  if (correct) soundHumanWin();
+  else soundHumanWrong();
   log.scrollTop = log.scrollHeight;
 });
 
