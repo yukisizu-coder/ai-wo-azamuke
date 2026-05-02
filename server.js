@@ -20,7 +20,6 @@ app.use(express.static(path.join(__dirname, 'public'), {
   }
 }));
 
-// 明示的なルート（念のため）
 app.get('/style.css', (req, res) => {
   res.type('text/css');
   res.sendFile(path.join(__dirname, 'public', 'style.css'));
@@ -86,7 +85,6 @@ function toKatakana(str) {
 // 単語エイリアス（漢字・表記ゆれ対応）
 // =====================================
 const wordAliases = {
-  // どうぶつ
   'ゾウ':['ぞう','象'],'クマ':['くま','熊'],'キリン':['きりん','麒麟'],
   'ライオン':['らいおん'],'サル':['さる','猿'],'うさぎ':['ウサギ','兎','兔'],
   'カメ':['かめ','亀'],'タヌキ':['たぬき','狸'],'キツネ':['きつね','狐'],
@@ -94,7 +92,6 @@ const wordAliases = {
   'イヌ':['いぬ','犬'],'ウマ':['うま','馬'],'ヒツジ':['ひつじ','羊'],
   'ブタ':['ぶた','豚'],'ニワトリ':['にわとり','鶏','鳥'],'コアラ':['こあら'],
   'カンガルー':['かんがるー'],
-  // たべもの
   'ラーメン':['らーめん','拉麺'],'ピザ':['ぴざ'],'イチゴ':['いちご','苺'],
   'おにぎり':['おにぎり','御握り','握り飯'],'ケーキ':['けーき'],
   'すし':['スシ','寿司','鮨','鮓'],'カレー':['かれー','カレーライス'],
@@ -106,7 +103,6 @@ const wordAliases = {
   'やきとり':['ヤキトリ','焼き鳥','焼鳥'],'プリン':['ぷりん'],
   'ドーナツ':['どーなつ'],'ポテト':['ぽてと','じゃがいも','ジャガイモ','芋'],
   'ラムネ':['らむね'],
-  // のりもの
   'バス':['ばす'],'ロケット':['ろけっと'],'じてんしゃ':['ジテンシャ','自転車'],
   'でんしゃ':['デンシャ','電車'],'ひこうき':['ヒコウキ','飛行機'],
   'せんすいかん':['センスイカン','潜水艦'],'ヘリコプター':['へりこぷたー'],
@@ -117,7 +113,6 @@ const wordAliases = {
   'しょうぼうしゃ':['ショウボウシャ','消防車'],'くるま':['クルマ','車'],
   'ふね':['フネ','船'],'じどうしゃ':['ジドウシャ','自動車','車'],
   'スケートボード':['すけーとぼーど'],'UFO':['ゆーふぉー','ユーフォー'],
-  // スポーツ
   'サッカー':['さっかー'],'すいえい':['スイエイ','水泳'],
   'すもう':['スモウ','相撲'],'テニス':['てにす'],'やきゅう':['ヤキュウ','野球'],
   'スキー':['すきー'],'ボクシング':['ぼくしんぐ'],'ゴルフ':['ごるふ'],
@@ -128,7 +123,6 @@ const wordAliases = {
   'スケート':['すけーと'],'バドミントン':['ばどみんとん'],
   'ピンポン':['ぴんぽん','卓球','たっきゅう'],'ラグビー':['らぐびー'],
   'アーチェリー':['あーちぇりー'],'ボウリング':['ぼうりんぐ'],
-  // たてもの
   'おしろ':['オシロ','城','しろ','お城'],'がっこう':['ガッコウ','学校'],
   'とうだい':['トウダイ','灯台'],'マンション':['まんしょん'],
   'じんじゃ':['ジンジャ','神社'],'えき':['エキ','駅'],
@@ -139,7 +133,6 @@ const wordAliases = {
   'えいがかん':['エイガカン','映画館'],'スーパー':['すーぱー'],
   'こうえん':['コウエン','公園'],'どうぶつえん':['ドウブツエン','動物園'],
   'おてら':['オテラ','てら','寺','お寺'],
-  // しぜん
   'さくら':['サクラ','桜'],'かみなり':['カミナリ','雷'],
   'かざん':['カザン','火山'],'にじ':['ニジ','虹'],'つき':['ツキ','月'],
   'やま':['ヤマ','山'],'うみ':['ウミ','海'],'たき':['タキ','滝'],
@@ -148,7 +141,6 @@ const wordAliases = {
   'かわ':['カワ','川','河'],'もり':['モリ','森'],'はな':['ハナ','花'],
   'きのこ':['キノコ','茸'],'かいがら':['カイガラ','貝殻','貝'],
   'こおり':['コオリ','氷'],'なみ':['ナミ','波'],'きり':['キリ','霧'],
-  // しごと
   'りょうりにん':['リョウリニン','料理人','コック','シェフ'],
   'うちゅうひこうし':['ウチュウヒコウシ','宇宙飛行士'],
   'にんじゃ':['ニンジャ','忍者'],
@@ -162,7 +154,6 @@ const wordAliases = {
   'うんてんし':['ウンテンシ','運転士','運転手'],'げいにん':['ゲイニン','芸人'],
   'まんがか':['マンガカ','漫画家'],'パティシエ':['ぱてぃしえ','お菓子職人'],
   'パイロット':['ぱいろっと'],
-  // きもち
   'おこり':['オコリ','怒り','いかり','イカリ','怒る'],
   'おどろき':['オドロキ','驚き','びっくり'],
   'はずかしい':['ハズカシイ','恥ずかしい','恥'],
@@ -175,7 +166,6 @@ const wordAliases = {
   'なく':['ナク','泣く','泣き'],'わらう':['ワラウ','笑う','笑い'],
   'しんぱい':['シンパイ','心配'],'つかれる':['ツカレル','疲れる'],
   'はらがたつ':['ハラガタツ','腹が立つ','怒り'],'おどろく':['オドロク','驚く'],
-  // エンタメ
   'ギター':['ぎたー'],'えいが':['エイガ','映画'],
   'おまつり':['オマツリ','祭り','まつり','祭'],
   'まんが':['マンガ','漫画'],'ゲーム':['げーむ'],'おんがく':['オンガク','音楽'],
@@ -185,7 +175,6 @@ const wordAliases = {
   'はなび':['ハナビ','花火'],'カラオケ':['からおけ'],
   'バンド':['ばんど'],'アニメ':['あにめ'],'アイドル':['あいどる'],
   'よさこい':['ヨサコイ'],
-  // なつかしい
   'ファミコン':['ふぁみこん','ゲーム機','テレビゲーム'],
   'くろでんわ':['クロデンワ','黒電話','電話','でんわ'],
   'かみしばい':['カミシバイ','紙芝居'],'ちょうちん':['チョウチン','提灯'],
@@ -197,7 +186,6 @@ const wordAliases = {
   'がまぐち':['ガマグチ','財布'],'ふみきり':['フミキリ','踏切'],
   'ちんどんや':['チンドンヤ'],'あんどん':['アンドン','行灯'],
   'よーよー':['ヨーヨー','ヨヨ'],
-  // うみのなかま
   'タコ':['たこ','蛸','章魚'],'サメ':['さめ','鮫'],
   'にんぎょ':['ニンギョ','人魚'],'クラゲ':['くらげ','水母','海月'],
   'イルカ':['いるか','海豚'],'ウミガメ':['うみがめ','海亀','海ガメ'],
@@ -208,7 +196,6 @@ const wordAliases = {
   'アザラシ':['あざらし'],'サンゴ':['さんご','珊瑚'],
   'ウナギ':['うなぎ','鰻'],'チンアナゴ':['ちんあなご'],
   'ナマコ':['なまこ','海鼠'],'カキ':['かき','牡蠣'],
-  // むずかしい概念
   'じゆう':['ジユウ','自由'],'じかん':['ジカン','時間'],
   'ゆめ':['ユメ','夢'],'あい':['アイ','愛'],'きおく':['キオク','記憶'],
   'おと':['オト','音'],'かぜ':['カゼ','風'],'こどく':['コドク','孤独'],
@@ -225,17 +212,12 @@ function checkAnswer(guess, correct) {
   const normalize = (s) => toKatakana(s.trim().toLowerCase()).replace(/\s/g, '');
   const g = normalize(guess);
   const c = normalize(correct);
-
-  // 直接マッチ
   if (g === c || g.includes(c) || c.includes(g)) return true;
-
-  // エイリアスチェック（正解ワードのエイリアスと比較）
   const aliases = wordAliases[correct] || [];
   for (const alias of aliases) {
     const a = normalize(alias);
     if (g === a || g.includes(a) || a.includes(g)) return true;
   }
-
   return false;
 }
 
@@ -245,49 +227,33 @@ function checkAnswer(guess, correct) {
 const difficultyPrompts = {
   easy: {
     system: 'あなたは絵を見て何が描かれているかを答えるAIです。しかしあなたは絵の読み取りがとても苦手で、よく間違えます。自信がなければ全然違う答えを言っても構いません。答えは必ず日本語で単語一つだけ答えてください。説明は不要です。',
-    hint: '（ゆるいモード：よく間違えてください）'
   },
   normal: {
     system: 'あなたは絵を見て何が描かれているかを答えるAIです。描かれた絵を見て、何を表しているか日本語で単語一つだけ答えてください。説明は不要です。',
-    hint: ''
   },
   hard: {
     system: 'あなたは高精度な画像認識AIです。描かれた絵を細部まで徹底的に分析し、何を表しているか正確に判断してください。どんな抽象的な絵でも必ず答えを出してください。答えは日本語で単語一つだけ答えてください。説明は不要です。',
-    hint: '（きびしいモード：できる限り正解を目指してください）'
   }
 };
 
 async function askClaudeAI(imageBase64, difficulty) {
   const { system } = difficultyPrompts[difficulty] || difficultyPrompts.normal;
-
-  // base64のヘッダーを取り除く
   const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '');
-
   const response = await anthropic.messages.create({
     model: 'claude-opus-4-5',
     max_tokens: 50,
     system,
-    messages: [
-      {
-        role: 'user',
-        content: [
-          {
-            type: 'image',
-            source: {
-              type: 'base64',
-              media_type: 'image/png',
-              data: base64Data,
-            },
-          },
-          {
-            type: 'text',
-            text: 'この絵に何が描かれていますか？日本語で単語一つだけ答えてください。',
-          },
-        ],
-      },
-    ],
+    messages: [{
+      role: 'user',
+      content: [
+        {
+          type: 'image',
+          source: { type: 'base64', media_type: 'image/png', data: base64Data },
+        },
+        { type: 'text', text: 'この絵に何が描かれていますか？日本語で単語一つだけ答えてください。' },
+      ],
+    }],
   });
-
   return response.content[0].text.trim();
 }
 
@@ -296,9 +262,7 @@ async function askClaudeAI(imageBase64, difficulty) {
 // =====================================
 function createRoom(hostId, hostName) {
   let code;
-  do {
-    code = generateRoomCode();
-  } while (rooms[code]);
+  do { code = generateRoomCode(); } while (rooms[code]);
 
   rooms[code] = {
     code,
@@ -307,16 +271,18 @@ function createRoom(hostId, hostName) {
     gameStarted: false,
     difficulty: 'normal',
     totalRounds: 5,
+    drawTime: 0,          // ← 追加：0=無制限, 20/40/60秒
     currentRound: 0,
     currentDrawerIndex: 0,
     currentWord: null,
     currentCategory: null,
-    phase: 'lobby', // lobby | word_select | drawing | ai_guessing | human_guessing | round_result | game_over
+    phase: 'lobby',
     canvasData: null,
     aiGuess: null,
     aiCorrect: false,
     humanGuesses: [],
-    roundWinner: null, // 'ai' | 'human' | 'draw'
+    roundWinner: null,
+    allDrawings: [],      // ← 追加：全ラウンドのギャラリー
   };
   return rooms[code];
 }
@@ -329,10 +295,7 @@ function removePlayer(roomCode, playerId) {
   const room = rooms[roomCode];
   if (!room) return;
   room.players = room.players.filter(p => p.id !== playerId);
-  if (room.players.length === 0) {
-    delete rooms[roomCode];
-    return null;
-  }
+  if (room.players.length === 0) { delete rooms[roomCode]; return null; }
   if (room.hostId === playerId && room.players.length > 0) {
     room.hostId = room.players[0].id;
   }
@@ -351,11 +314,7 @@ io.on('connection', (socket) => {
     const room = createRoom(socket.id, name);
     socket.join(room.code);
     socket.roomCode = room.code;
-    socket.emit('room_created', {
-      roomCode: room.code,
-      players: room.players,
-      isHost: true,
-    });
+    socket.emit('room_created', { roomCode: room.code, players: room.players, isHost: true });
     console.log(`ルーム作成: ${room.code} by ${name}`);
   });
 
@@ -364,55 +323,38 @@ io.on('connection', (socket) => {
     const code = (roomCode || '').toUpperCase().trim();
     const name = (playerName || '名無し').slice(0, 12);
     const room = getRoom(code);
-
-    if (!room) {
-      socket.emit('error', { message: 'ルームが見つかりません。コードを確認してね！' });
-      return;
-    }
-    if (room.gameStarted) {
-      socket.emit('error', { message: 'このゲームはすでに開始しています。' });
-      return;
-    }
-    if (room.players.length >= 6) {
-      socket.emit('error', { message: 'このルームは満員です（最大6人）。' });
-      return;
-    }
-
+    if (!room) { socket.emit('error', { message: 'ルームが見つかりません。コードを確認してね！' }); return; }
+    if (room.gameStarted) { socket.emit('error', { message: 'このゲームはすでに開始しています。' }); return; }
+    if (room.players.length >= 6) { socket.emit('error', { message: 'このルームは満員です（最大6人）。' }); return; }
     room.players.push({ id: socket.id, name, score: 0 });
     socket.join(code);
     socket.roomCode = code;
-
-    socket.emit('room_joined', {
-      roomCode: code,
-      players: room.players,
-      isHost: false,
-    });
+    socket.emit('room_joined', { roomCode: code, players: room.players, isHost: false });
     socket.to(code).emit('player_updated', { players: room.players });
     console.log(`${name} がルーム ${code} に参加`);
   });
 
   // ゲーム開始
-  socket.on('start_game', ({ difficulty, totalRounds }) => {
+  socket.on('start_game', ({ difficulty, totalRounds, drawTime }) => {
     const room = getRoom(socket.roomCode);
     if (!room || room.hostId !== socket.id) return;
-    if (room.players.length < 2) {
-      socket.emit('error', { message: '2人以上必要です！' });
-      return;
-    }
+    if (room.players.length < 2) { socket.emit('error', { message: '2人以上必要です！' }); return; }
 
     room.gameStarted = true;
     room.difficulty = difficulty || 'normal';
     room.totalRounds = parseInt(totalRounds) || 5;
+    room.drawTime = parseInt(drawTime) || 0;   // ← 追加
     room.currentRound = 0;
     room.currentDrawerIndex = 0;
+    room.allDrawings = [];                      // ← 追加：ゲーム開始時リセット
     room.players.forEach(p => p.score = 0);
 
     io.to(room.code).emit('game_started', {
       difficulty: room.difficulty,
       totalRounds: room.totalRounds,
+      drawTime: room.drawTime,                  // ← 追加
       players: room.players,
     });
-
     startNextRound(room);
   });
 
@@ -423,16 +365,10 @@ io.on('connection', (socket) => {
     const drawer = room.players[room.currentDrawerIndex];
     if (!drawer || drawer.id !== socket.id) return;
     if (room.phase !== 'word_select') return;
-
-    if (!wordLists[category]) {
-      socket.emit('error', { message: '無効なカテゴリです。' });
-      return;
-    }
+    if (!wordLists[category]) { socket.emit('error', { message: '無効なカテゴリです。' }); return; }
 
     room.currentCategory = category;
     const words = getRandomWords(category, 3);
-
-    // お題候補は描き手だけに送る
     socket.emit('word_choices', { words, category });
   });
 
@@ -448,24 +384,26 @@ io.on('connection', (socket) => {
     room.phase = 'drawing';
     room.canvasData = null;
 
-    // 描き手以外にはカテゴリだけ伝える
+    // 観戦者へ（カテゴリだけ・drawTime付き）
     socket.to(room.code).emit('drawing_phase', {
       drawerName: drawer.name,
       category: room.currentCategory,
       round: room.currentRound,
       totalRounds: room.totalRounds,
+      drawTime: room.drawTime,                  // ← 追加
     });
 
-    // 描き手には描画開始を伝える
+    // 描き手へ（drawTime付き）
     socket.emit('start_drawing', {
       word,
       category: room.currentCategory,
       round: room.currentRound,
       totalRounds: room.totalRounds,
+      drawTime: room.drawTime,                  // ← 追加
     });
   });
 
-  // 描画データ同期
+  // 描画データ同期（ライブ描画）
   socket.on('draw_event', (data) => {
     const room = getRoom(socket.roomCode);
     if (!room || room.phase !== 'drawing') return;
@@ -484,9 +422,14 @@ io.on('connection', (socket) => {
     room.canvasData = imageData;
     room.humanGuesses = [];
 
-    io.to(room.code).emit('ai_guessing', {
-      difficulty: room.difficulty,
+    // ギャラリーに保存 ← 追加
+    room.allDrawings.push({
+      round: room.currentRound,
+      drawerName: drawer.name,
+      imageData,
     });
+
+    io.to(room.code).emit('ai_guessing', { difficulty: room.difficulty });
 
     try {
       const aiGuess = await askClaudeAI(imageData, room.difficulty);
@@ -500,13 +443,10 @@ io.on('connection', (socket) => {
       });
 
       if (room.aiCorrect) {
-        // AIの勝ち
         setTimeout(() => endRound(room, 'ai'), 3000);
       } else {
-        // 人間の予想フェーズへ
         room.phase = 'human_guessing';
         const nonDrawers = room.players.filter(p => p.id !== drawer.id);
-
         io.to(room.code).emit('human_guessing_phase', {
           drawerName: drawer.name,
           category: room.currentCategory,
@@ -515,11 +455,7 @@ io.on('connection', (socket) => {
       }
     } catch (err) {
       console.error('Claude API エラー:', err);
-      io.to(room.code).emit('ai_result', {
-        guess: 'エラーが発生しました',
-        correct: false,
-        correctWord: null,
-      });
+      io.to(room.code).emit('ai_result', { guess: 'エラーが発生しました', correct: false, correctWord: null });
       room.phase = 'human_guessing';
       const nonDrawers = room.players.filter(p => p.id !== drawer.id);
       io.to(room.code).emit('human_guessing_phase', {
@@ -535,34 +471,35 @@ io.on('connection', (socket) => {
     const room = getRoom(socket.roomCode);
     if (!room || room.phase !== 'human_guessing') return;
     const drawer = room.players[room.currentDrawerIndex];
-    if (drawer && drawer.id === socket.id) return; // 描き手は回答不可
-
-    // すでに回答済みかチェック
+    if (drawer && drawer.id === socket.id) return;
     if (room.humanGuesses.find(g => g.playerId === socket.id)) return;
-
     const player = room.players.find(p => p.id === socket.id);
     if (!player) return;
-
     const correct = checkAnswer(guess, room.currentWord);
     room.humanGuesses.push({ playerId: socket.id, name: player.name, guess, correct });
-
-    io.to(room.code).emit('guess_submitted', {
-      playerName: player.name,
-      guess,
-      correct,
-    });
-
-    if (correct) {
-      // 人間の勝ち
-      setTimeout(() => endRound(room, 'human', socket.id), 2000);
-      return;
-    }
-
-    // 全員回答したか確認
+    io.to(room.code).emit('guess_submitted', { playerName: player.name, guess, correct });
+    if (correct) { setTimeout(() => endRound(room, 'human', socket.id), 2000); return; }
     const nonDrawers = room.players.filter(p => p.id !== drawer?.id);
     if (room.humanGuesses.length >= nonDrawers.length) {
       setTimeout(() => endRound(room, 'draw'), 2000);
     }
+  });
+
+  // =====================================
+  // チャット ← 追加
+  // =====================================
+  socket.on('chat_message', ({ text }) => {
+    const room = getRoom(socket.roomCode);
+    if (!room) return;
+    const player = room.players.find(p => p.id === socket.id);
+    if (!player) return;
+    const msg = (text || '').trim().slice(0, 30);
+    if (!msg) return;
+    io.to(room.code).emit('chat_message', {
+      playerId: socket.id,
+      playerName: player.name,
+      text: msg,
+    });
   });
 
   // 次のラウンドへ（ホストが押す）
@@ -578,9 +515,7 @@ io.on('connection', (socket) => {
     const code = socket.roomCode;
     if (!code) return;
     const room = removePlayer(code, socket.id);
-    if (room) {
-      io.to(code).emit('player_updated', { players: room.players });
-    }
+    if (room) { io.to(code).emit('player_updated', { players: room.players }); }
     console.log('切断:', socket.id);
   });
 });
@@ -590,13 +525,8 @@ io.on('connection', (socket) => {
 // =====================================
 function startNextRound(room) {
   room.currentRound++;
+  if (room.currentRound > room.totalRounds) { endGame(room); return; }
 
-  if (room.currentRound > room.totalRounds) {
-    endGame(room);
-    return;
-  }
-
-  // 描き手をローテーション
   room.currentDrawerIndex = (room.currentRound - 1) % room.players.length;
   room.phase = 'word_select';
   room.currentWord = null;
@@ -607,8 +537,6 @@ function startNextRound(room) {
   room.roundWinner = null;
 
   const drawer = room.players[room.currentDrawerIndex];
-
-  // 全員にラウンド開始を通知
   io.to(room.code).emit('round_started', {
     round: room.currentRound,
     totalRounds: room.totalRounds,
@@ -621,16 +549,13 @@ function startNextRound(room) {
 function endRound(room, winner, winnerId = null) {
   room.phase = 'round_result';
   room.roundWinner = winner;
-
   const drawer = room.players[room.currentDrawerIndex];
 
-  // スコア計算
   if (winner === 'human' && winnerId) {
     const winPlayer = room.players.find(p => p.id === winnerId);
     if (winPlayer) winPlayer.score += 2;
     if (drawer) drawer.score += 1;
   }
-  // AIが勝った場合・引き分けはスコアなし
 
   io.to(room.code).emit('round_over', {
     winner,
@@ -640,15 +565,14 @@ function endRound(room, winner, winnerId = null) {
     round: room.currentRound,
     totalRounds: room.totalRounds,
     isLastRound: room.currentRound >= room.totalRounds,
+    gallery: room.allDrawings,                  // ← 追加：全ラウンドのギャラリー
   });
 }
 
 function endGame(room) {
   room.phase = 'game_over';
   room.gameStarted = false;
-
   const sorted = [...room.players].sort((a, b) => b.score - a.score);
-
   io.to(room.code).emit('game_over', {
     scores: sorted.map(p => ({ name: p.name, score: p.score })),
     winner: sorted[0]?.name,
