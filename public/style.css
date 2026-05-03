@@ -1131,6 +1131,49 @@ body {
 }
 
 /* =====================================
+   BGMボタン ③
+===================================== */
+.btn-bgm {
+  font-size: 18px;
+  background: none;
+  border: 2px solid rgba(242,232,217,0.3);
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 2px 6px;
+  color: var(--cream);
+  transition: transform 0.1s, border-color 0.2s;
+  line-height: 1;
+}
+.btn-bgm:hover { border-color: var(--mustard); }
+.btn-bgm:active { transform: scale(0.9); }
+
+/* =====================================
+   音声チャットボタン
+===================================== */
+.btn-voice {
+  font-size: 18px;
+  background: none;
+  border: 2px solid rgba(242,232,217,0.3);
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 2px 6px;
+  color: var(--cream);
+  transition: transform 0.1s, border-color 0.2s, background 0.2s;
+  line-height: 1;
+}
+.btn-voice:hover { border-color: var(--teal); }
+.btn-voice:active { transform: scale(0.9); }
+.btn-voice.on {
+  background: var(--teal);
+  border-color: var(--teal);
+  animation: voicePulse 1.5s ease-in-out infinite;
+}
+@keyframes voicePulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(45,110,110,0.5); }
+  50%       { box-shadow: 0 0 0 6px rgba(45,110,110,0); }
+}
+
+/* =====================================
    タイマー
 ===================================== */
 #timer-display {
@@ -1284,6 +1327,79 @@ body {
 .btn-chat-send:active {
   transform: scale(0.9) translateY(2px);
   box-shadow: none;
+}
+
+/* =====================================
+   キャンバス＋チャット横並びラッパー ②
+===================================== */
+.canvas-chat-wrapper {
+  width: 100%;
+  max-width: 700px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+@media (min-width: 640px) {
+  .canvas-chat-wrapper {
+    flex-direction: row;
+    max-width: 960px;
+    align-items: flex-start;
+  }
+  .canvas-chat-wrapper #canvas-area {
+    flex: 1;
+    min-width: 0;
+    max-width: 700px;
+  }
+  .canvas-chat-wrapper .chat-area {
+    width: 230px;
+    flex-shrink: 0;
+    max-width: 230px;
+    margin-top: 0;
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+  }
+  .canvas-chat-wrapper .chat-area:not(.hidden) {
+    display: flex;
+  }
+  .canvas-chat-wrapper .chat-messages {
+    max-height: 280px;
+    flex: 1;
+  }
+}
+
+/* =====================================
+   AIの悔しい顔 ①
+===================================== */
+.ai-eye.frustrated {
+  height: 7px;
+  border-radius: 2px;
+  background: var(--orange);
+  box-shadow: 0 0 8px var(--orange);
+  transform: rotate(-8deg);
+}
+.ai-eye.right.frustrated {
+  transform: rotate(8deg);
+}
+.ai-eye.frustrated::after {
+  display: none;
+}
+.ai-mouth.frustrated {
+  border-bottom: none;
+  border-top: 3px solid var(--orange);
+  border-left: none;
+  border-right: none;
+  border-radius: 0;
+  height: 0;
+  width: 24px;
+  bottom: 16px;
+  border-color: var(--orange);
+  animation: frustratedMouth 0.4s ease infinite alternate;
+}
+@keyframes frustratedMouth {
+  from { width: 20px; }
+  to   { width: 28px; }
 }
 
 /* =====================================

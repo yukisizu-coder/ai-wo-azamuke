@@ -116,19 +116,14 @@
       <span id="round-info">ラウンド 1/5</span>
       <span id="phase-info">準備中</span>
       <span id="timer-display"></span>
+      <button id="btn-bgm" class="btn-bgm" title="BGM">🔇</button>
+      <button id="btn-voice" class="btn-voice" title="音声チャット">🔕</button>
     </div>
 
     <!-- カテゴリ選択フェーズ（描き手のみ） -->
     <div id="phase-category" class="phase-panel hidden">
       <h3>カテゴリを選んでね！</h3>
       <div id="category-grid" class="category-grid"></div>
-    </div>
-
-    <!-- お題選択フェーズ（描き手のみ） -->
-    <div id="phase-word-select" class="phase-panel hidden">
-      <h3>お題を選んでね！</h3>
-      <p class="hint-text">このお題を絵で描いてね。AIには内緒だよ！</p>
-      <div id="word-choices" class="word-choices"></div>
     </div>
 
     <!-- お題表示（描き手のみ） -->
@@ -140,6 +135,9 @@
     <div id="phase-watching" class="phase-panel hidden">
       <p id="watching-message" class="watching-message"></p>
     </div>
+
+    <!-- キャンバス＋チャットラッパー（②PCで横並び） -->
+    <div class="canvas-chat-wrapper">
 
     <!-- キャンバスエリア -->
     <div id="canvas-area" class="canvas-area hidden">
@@ -191,6 +189,8 @@
         <button id="btn-chat-send" class="btn-chat-send">💬</button>
       </div>
     </div>
+
+    </div><!-- /canvas-chat-wrapper -->
 
     <!-- AI判定フェーズ -->
     <div id="phase-ai" class="phase-panel hidden">
@@ -286,6 +286,7 @@
   <div id="error-toast" class="error-toast hidden"></div>
 
   <script src="/socket.io/socket.io.js"></script>
+  <script src="https://unpkg.com/simple-peer@9.11.1/simplepeer.min.js"></script>
   <script src="game.js"></script>
 </body>
 </html>
