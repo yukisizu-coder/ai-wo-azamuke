@@ -272,7 +272,8 @@ document.getElementById('btn-copy-code').addEventListener('click', () => {
 });
 document.getElementById('btn-start-game').addEventListener('click', () => {
   soundClick();
-  const comboOnly = document.getElementById('setting-comboonly').value === '1';
+  const comboOnlyEl = document.getElementById('setting-comboonly');
+  const comboOnly = comboOnlyEl ? comboOnlyEl.value === '1' : false;
   isComboOnly = comboOnly;
   socket.emit('start_game', {
     difficulty: document.getElementById('setting-difficulty').value,

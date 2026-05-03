@@ -100,6 +100,13 @@
             <option value="20">⏱️ 20秒（超ハード！）</option>
           </select>
         </div>
+        <div class="setting-row">
+          <label>お題モード</label>
+          <select id="setting-comboonly">
+            <option value="0" selected>🎲 全カテゴリ（普通）</option>
+            <option value="1">🔥 くみあわせのみ（上級者向け）</option>
+          </select>
+        </div>
         <button class="btn btn-primary btn-large" id="btn-start-game">ゲームスタート！</button>
       </div>
       <div id="guest-waiting" class="hidden">
@@ -279,6 +286,18 @@
       <h2 class="gameover-title">ゲーム終了！</h2>
       <div class="final-scores" id="final-score-list"></div>
       <button class="btn btn-primary btn-large" id="btn-play-again">もう一度！</button>
+    </div>
+  </div>
+
+  <!-- 再参加ダイアログ -->
+  <div id="rejoin-dialog" class="rejoin-dialog hidden">
+    <div class="rejoin-box">
+      <p class="rejoin-title">🎮 ゲームが途中だよ！</p>
+      <p class="rejoin-info" id="rejoin-info"></p>
+      <div class="rejoin-buttons">
+        <button class="btn btn-primary" id="btn-rejoin">ゲームに戻る！</button>
+        <button class="btn btn-back" id="btn-rejoin-cancel">やめる</button>
+      </div>
     </div>
   </div>
 

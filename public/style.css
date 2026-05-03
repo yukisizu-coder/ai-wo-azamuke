@@ -1136,6 +1136,48 @@ body {
 }
 
 /* =====================================
+   再参加ダイアログ
+===================================== */
+.rejoin-dialog {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 26, 46, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+.rejoin-dialog.hidden { display: none; }
+.rejoin-box {
+  background: var(--cream);
+  border: 4px solid var(--navy);
+  border-radius: 16px;
+  padding: 28px 24px;
+  text-align: center;
+  max-width: 320px;
+  width: 90%;
+  animation: popIn 0.3s ease;
+}
+.rejoin-title {
+  font-family: 'Press Start 2P', cursive;
+  font-size: clamp(10px, 2.5vw, 14px);
+  color: var(--navy);
+  margin-bottom: 12px;
+  line-height: 1.6;
+}
+.rejoin-info {
+  font-size: 14px;
+  color: var(--brown);
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+.rejoin-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* =====================================
    エラートースト
 ===================================== */
 .error-toast {
