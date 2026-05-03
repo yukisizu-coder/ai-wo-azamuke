@@ -197,11 +197,12 @@ const wordAliases = {
   'たこ':['タコ','凧'],'ふうりん':['フウリン','風鈴'],
   'きんぎょすくい':['キンギョスクイ','金魚すくい'],'みこし':['ミコシ','神輿'],
   'ひなにんぎょう':['ヒナニンギョウ','雛人形'],'こいのぼり':['コイノボリ','鯉のぼり'],
+  'でんしゃのつり革':['つりかわ','ツリカワ','つり革','吊り革','でんしゃのつりかわ','デンシャノツリカワ'],
   'タコ':['たこ','蛸'],'サメ':['さめ','鮫'],
   'にんぎょ':['ニンギョ','人魚'],'クラゲ':['くらげ','水母'],
   'イルカ':['いるか','海豚'],'ウミガメ':['うみがめ','海亀'],
   'カニ':['かに','蟹'],'エビ':['えび','海老'],
-  'フグ':['ふぐ','河豚'],'ヒトデ':['ひとで','海星'],
+  'フグ':['ふぐ','河豚'],'ヒトデ':['ひとで'],
   'タツノオトシゴ':['たつのおとしご'],'クジラ':['くじら','鯨'],
   'マンタ':['まんた'],'ラッコ':['らっこ'],'アザラシ':['あざらし'],
   'サンゴ':['さんご','珊瑚'],'ウナギ':['うなぎ','鰻'],
@@ -233,11 +234,14 @@ function checkAnswer(guess, correct) {
   const normalize = (s) => toKatakana(s.trim().toLowerCase()).replace(/\s/g, '');
   const g = normalize(guess);
   const c = normalize(correct);
+  // 正解ワード同士のチェック：完全一致 or どちらかが相手を含む
   if (g === c || g.includes(c) || c.includes(g)) return true;
+  // エイリアスのチェック：完全一致 or guessがaliasを含む のみ
+  // （alias.includes(guess) は「海星」に「星」が含まれるような誤判定を防ぐため除外）
   const aliases = wordAliases[correct] || [];
   for (const alias of aliases) {
     const a = normalize(alias);
-    if (g === a || g.includes(a) || a.includes(g)) return true;
+    if (g === a || g.includes(a)) return true;
   }
   return false;
 }
@@ -251,14 +255,21 @@ const difficultyPrompts = {
   hard: { system: 'あなたは高精度な画像認識AIです。描かれた絵を細部まで徹底的に分析し、正確に判断してください。答えは日本語で単語一つだけ答えてください。説明は不要です。' },
 };
 
-async function askClaudeAI(imageBase64, difficulty) {
-  const { system } = difficultyPrompts[difficulty] || difficultyPrompts.normal;
+async function askClaudeAI(imageBase64, difficulty, category) {
+  const baseSystem = (difficultyPrompts[difficulty] || difficultyPrompts.normal).system;
+  // ④ カテゴリを知った上で判定させる
+  const system = category
+    ? baseSystem + `\nこの絵のお題は「${category}」カテゴリの中の何かです。カテゴリを参考に、線や色の使い方もよく観察して判断してください。`
+    : baseSystem;
   const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '');
+  const userText = category
+    ? `この絵は「${category}」カテゴリの中の何かを描いたものです。何を描いているか、日本語で単語一つだけ答えてください。`
+    : 'この絵に何が描かれていますか？日本語で単語一つだけ答えてください。';
   const response = await anthropic.messages.create({
     model: 'claude-opus-4-5', max_tokens: 50, system,
     messages: [{ role: 'user', content: [
       { type: 'image', source: { type: 'base64', media_type: 'image/png', data: base64Data } },
-      { type: 'text', text: 'この絵に何が描かれていますか？日本語で単語一つだけ答えてください。' },
+      { type: 'text', text: userText },
     ]}],
   });
   return response.content[0].text.trim();
@@ -391,7 +402,7 @@ io.on('connection', (socket) => {
     io.to(room.code).emit('ai_guessing', { difficulty: room.difficulty });
 
     try {
-      const aiGuess = await askClaudeAI(imageData, room.difficulty);
+      const aiGuess = await askClaudeAI(imageData, room.difficulty, room.currentCategory);
       room.aiGuess = aiGuess;
       room.aiCorrect = checkAnswer(aiGuess, room.currentWord);
       io.to(room.code).emit('ai_result', { guess: aiGuess, correct: room.aiCorrect, correctWord: room.aiCorrect ? room.currentWord : null });
