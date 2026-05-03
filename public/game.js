@@ -4,6 +4,7 @@
 const socket = io();
 
 let myName = '', myRoomCode = '', isHost = false, isDrawer = false, hasGuessed = false;
+let isComboOnly = false; // くみあわせのみモード
 let canvas, ctx, drawing = false, currentColor = '#1B2A4A', currentSize = 3, isEraser = false, lastX = 0, lastY = 0;
 let undoHistory = [], drawTimer = null, drawTimeLeft = 0;
 
@@ -87,6 +88,39 @@ document.getElementById('btn-bgm').addEventListener('click', () => {
   if (bgmEnabled) { stopBGM(); document.getElementById('btn-bgm').textContent = '🔇'; }
   else { startBGM(); document.getElementById('btn-bgm').textContent = '🎵'; }
 });
+
+// =====================================
+// 再参加機能
+// =====================================
+function saveSession(roomCode, playerName) {
+  try { localStorage.setItem('aiAzamuke_session', JSON.stringify({ roomCode, playerName })); } catch(e) {}
+}
+function clearSession() {
+  try { localStorage.removeItem('aiAzamuke_session'); } catch(e) {}
+}
+function checkRejoinSession() {
+  try {
+    const raw = localStorage.getItem('aiAzamuke_session');
+    if (!raw) return;
+    const { roomCode, playerName } = JSON.parse(raw);
+    if (!roomCode || !playerName) return;
+    const dialog = document.getElementById('rejoin-dialog');
+    document.getElementById('rejoin-info').textContent =
+      `ルーム「${roomCode}」に「${playerName}」として\nゲームが途中だよ！戻る？`;
+    dialog.classList.remove('hidden');
+    document.getElementById('btn-rejoin').onclick = () => {
+      dialog.classList.add('hidden');
+      myName = playerName; myRoomCode = roomCode;
+      socket.emit('rejoin_room', { roomCode, playerName });
+    };
+    document.getElementById('btn-rejoin-cancel').onclick = () => {
+      dialog.classList.add('hidden');
+      clearSession();
+    };
+  } catch(e) { clearSession(); }
+}
+// ページ読み込み時に確認
+window.addEventListener('load', checkRejoinSession);
 
 // =====================================
 // 音声チャット（WebRTC + Simple-peer）
@@ -238,10 +272,13 @@ document.getElementById('btn-copy-code').addEventListener('click', () => {
 });
 document.getElementById('btn-start-game').addEventListener('click', () => {
   soundClick();
+  const comboOnly = document.getElementById('setting-comboonly').value === '1';
+  isComboOnly = comboOnly;
   socket.emit('start_game', {
     difficulty: document.getElementById('setting-difficulty').value,
     totalRounds: parseInt(document.getElementById('setting-rounds').value),
     drawTime: parseInt(document.getElementById('setting-drawtime').value),
+    comboOnly,
   });
 });
 
@@ -450,15 +487,39 @@ socket.on('error', ({ message }) => showError(message));
 
 socket.on('room_created', ({ roomCode, players, isHost: host }) => {
   myRoomCode = roomCode; isHost = host;
+  saveSession(roomCode, myName);
   document.getElementById('lobby-room-code').textContent = roomCode; updatePlayerList(players);
   document.getElementById('host-settings').classList.remove('hidden'); document.getElementById('guest-waiting').classList.add('hidden');
   showScreen('screen-lobby');
 });
 socket.on('room_joined', ({ roomCode, players, isHost: host }) => {
   myRoomCode = roomCode; isHost = host;
+  saveSession(roomCode, myName);
   document.getElementById('lobby-room-code').textContent = roomCode; updatePlayerList(players);
   document.getElementById('host-settings').classList.add('hidden'); document.getElementById('guest-waiting').classList.remove('hidden');
   showScreen('screen-lobby');
+});
+// 再参加成功
+socket.on('rejoined', ({ roomCode, players, isHost: host, phase, currentRound, totalRounds, drawerId, drawerName, canvasData, comboOnly }) => {
+  myRoomCode = roomCode; isHost = host; isComboOnly = !!comboOnly;
+  saveSession(roomCode, myName);
+  initCanvas(); showScreen('screen-game'); hideAllPhases(); showChat(false);
+  updatePlayerList(players);
+  document.getElementById('round-info').textContent = `ラウンド ${currentRound}/${totalRounds}`;
+  isDrawer = (drawerId === socket.id);
+  // 現在フェーズに応じたメッセージ
+  const phaseLabels = { word_select:'カテゴリ選択中', drawing:'描画中', ai_guessing:'AI判定中', human_guessing:'人間が回答中', round_result:'ラウンド結果' };
+  document.getElementById('phase-info').textContent = phaseLabels[phase] || '復帰中...';
+  document.getElementById('watching-message').textContent = phase === 'drawing'
+    ? `${drawerName} が描いています...（復帰しました）`
+    : `${drawerName} のターン（復帰しました）`;
+  document.getElementById('phase-watching').classList.remove('hidden');
+  // キャンバスに途中の絵を復元
+  if (canvasData) {
+    const img = new Image(); img.onload = () => { if(ctx) ctx.drawImage(img, 0, 0, canvas.width, canvas.height); }; img.src = canvasData;
+    document.getElementById('canvas-area').classList.remove('hidden');
+  }
+  showError('ゲームに復帰しました！🌸');
 });
 socket.on('player_updated', ({ players }) => updatePlayerList(players));
 
@@ -467,21 +528,28 @@ socket.on('game_started', ({ difficulty, totalRounds, drawTime, players }) => {
   document.getElementById('phase-info').textContent = 'まもなく開始';
 });
 
-socket.on('round_started', ({ round, totalRounds, drawerName, drawerId, categories }) => {
+socket.on('round_started', ({ round, totalRounds, drawerName, drawerId, categories, comboOnly }) => {
   isDrawer = (drawerId === socket.id); hasGuessed = false;
+  if (comboOnly !== undefined) isComboOnly = comboOnly;
   stopDrawTimer(); showChat(false);
   document.getElementById('round-info').textContent = `ラウンド ${round}/${totalRounds}`;
-  document.getElementById('phase-info').textContent = isDrawer ? 'あなたが描き手！' : `${drawerName} が描いています`;
   if (ctx) { ctx.fillStyle='white'; ctx.fillRect(0,0,canvas.width,canvas.height); }
   undoHistory = []; if (canvas) undoHistory.push(canvas.toDataURL()); updateUndoButton();
   document.getElementById('chat-messages').innerHTML = '';
 
-  if (isDrawer) {
+  if (isComboOnly) {
+    // くみあわせのみモード：カテゴリ選択なし、お題はサーバーから自動で届く
+    const msg = isDrawer ? 'お題を準備中...🎲' : `${drawerName} のターン！お題を待っています...`;
+    document.getElementById('watching-message').textContent = msg;
+    document.getElementById('phase-info').textContent = isDrawer ? 'お題を待って！' : `${drawerName} のターン`;
+    hideAllPhases(); document.getElementById('phase-watching').classList.remove('hidden');
+  } else if (isDrawer) {
     buildCategoryGrid(categories);
     hideAllPhases(); document.getElementById('phase-category').classList.remove('hidden');
     document.getElementById('phase-info').textContent = 'カテゴリを選ぼう！';
   } else {
     document.getElementById('watching-message').textContent = `${drawerName} がカテゴリを選んでいます...`;
+    document.getElementById('phase-info').textContent = `${drawerName} が描いています`;
     hideAllPhases(); document.getElementById('phase-watching').classList.remove('hidden');
   }
 });
@@ -589,6 +657,7 @@ socket.on('round_over', ({ winner, correctWord, scores, round, totalRounds, isLa
 });
 
 socket.on('game_over', ({ scores, winner }) => {
+  clearSession(); // ゲーム終了したのでセッションクリア
   const list = document.getElementById('final-score-list'); list.innerHTML = '';
   scores.forEach((s,i) => { const item=document.createElement('div'); item.className='final-score-item'; const medals=['🥇','🥈','🥉']; item.innerHTML=`<span>${medals[i]||`${i+1}位`} ${s.name}</span><span>${s.score}pt</span>`; list.appendChild(item); });
   showScreen('screen-gameover');
