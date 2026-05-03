@@ -500,8 +500,8 @@ socket.on('start_drawing', ({ word, category, drawTime }) => {
   if (drawTime && drawTime > 0) startDrawTimer(drawTime);
 });
 
-socket.on('drawing_phase', ({ drawerName, category, drawTime }) => {
-  document.getElementById('watching-message').textContent = `${drawerName} が「${category}」から描いています...`;
+socket.on('drawing_phase', ({ drawerName, drawTime }) => {
+  document.getElementById('watching-message').textContent = `${drawerName} が描いています... 🖊️`;
   hideAllPhases();
   document.getElementById('canvas-area').classList.remove('hidden');
   document.getElementById('phase-watching').classList.remove('hidden');
@@ -554,8 +554,8 @@ socket.on('ai_result', ({ guess, correct }) => {
 socket.on('human_guessing_phase', ({ drawerName, category }) => {
   const label = document.getElementById('human-guess-label');
   const inputArea = document.getElementById('guess-input-area');
-  if (isDrawer) { label.textContent = `みんなが「${category}」の答えを考えています...`; inputArea.classList.add('hidden'); }
-  else { label.textContent = `「${category}」カテゴリ！何が描いてある？`; inputArea.classList.remove('hidden'); document.getElementById('guess-input').disabled = false; document.getElementById('btn-submit-guess').disabled = false; }
+  if (isDrawer) { label.textContent = `みんなが答えを考えています...`; inputArea.classList.add('hidden'); }
+  else { label.textContent = `何が描いてある？`; inputArea.classList.remove('hidden'); document.getElementById('guess-input').disabled = false; document.getElementById('btn-submit-guess').disabled = false; }
   document.getElementById('guess-log').innerHTML = '';
   hideAllPhases();
   document.getElementById('phase-human').classList.remove('hidden');
