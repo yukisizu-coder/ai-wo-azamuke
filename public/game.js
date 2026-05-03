@@ -5,6 +5,7 @@ const socket = io();
 
 let myName = '', myRoomCode = '', isHost = false, isDrawer = false, hasGuessed = false;
 let isComboOnly = false; // くみあわせのみモード
+let canvasInitialized = false; // キャンバスのイベントリスナー登録済みフラグ
 let canvas, ctx, drawing = false, currentColor = '#1B2A4A', currentSize = 3, isEraser = false, lastX = 0, lastY = 0;
 let undoHistory = [], drawTimer = null, drawTimeLeft = 0;
 
@@ -345,13 +346,17 @@ function initCanvas() {
   canvas.style.width = maxW + 'px'; canvas.style.height = Math.round(maxW * 0.6) + 'px';
   ctx.fillStyle = 'white'; ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  canvas.addEventListener('mousedown', startDraw);
-  canvas.addEventListener('mousemove', draw);
-  canvas.addEventListener('mouseup', endDraw);
-  canvas.addEventListener('mouseleave', endDraw);
-  canvas.addEventListener('touchstart', e => { e.preventDefault(); startDraw(e.touches[0]); }, { passive: false });
-  canvas.addEventListener('touchmove',  e => { e.preventDefault(); draw(e.touches[0]); },      { passive: false });
-  canvas.addEventListener('touchend',   e => { e.preventDefault(); endDraw(); },                { passive: false });
+  // イベントリスナーは1回だけ登録（2回目ゲーム開始時の重複登録を防ぐ）
+  if (!canvasInitialized) {
+    canvasInitialized = true;
+    canvas.addEventListener('mousedown', startDraw);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', endDraw);
+    canvas.addEventListener('mouseleave', endDraw);
+    canvas.addEventListener('touchstart', e => { e.preventDefault(); startDraw(e.touches[0]); }, { passive: false });
+    canvas.addEventListener('touchmove',  e => { e.preventDefault(); draw(e.touches[0]); },      { passive: false });
+    canvas.addEventListener('touchend',   e => { e.preventDefault(); endDraw(); },                { passive: false });
+  }
 }
 function getPos(e) {
   const rect = canvas.getBoundingClientRect();
