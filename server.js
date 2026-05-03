@@ -22,10 +22,62 @@ app.get('/game.js', (req, res) => { res.type('application/javascript'); res.send
 app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'index.html')); });
 
 // =====================================
-// お題リスト（各40個）⑤⑥⑦
+// 組み合わせお題（くみあわせカテゴリ用）
+// keywords: 各グループ内はOR、グループ間はAND
+//   例: [['確定申告','かくていしんこく'], ['カバ','かば']]
+//   → 「確定申告 or かくていしんこく」AND「カバ or かば」が両方含まれれば正解
+// =====================================
+const comboWords = [
+  // ── 普通っぽい（3割） ──
+  { phrase: '笹を食べるパンダ',             keywords: [['笹','ささ'],['パンダ','ぱんだ']] },
+  { phrase: '傘をさすカエル',               keywords: [['傘','かさ'],['カエル','かえる']] },
+  { phrase: '本を読むウサギ',               keywords: [['本','ほん'],['ウサギ','うさぎ']] },
+  { phrase: 'ピアノを弾くゴリラ',           keywords: [['ピアノ','ぴあの'],['ゴリラ','ごりら']] },
+  { phrase: 'ラーメンを食べるクマ',         keywords: [['ラーメン','らーめん'],['クマ','くま']] },
+  { phrase: '宇宙服を着たサル',             keywords: [['宇宙','うちゅう'],['サル','さる']] },
+  { phrase: 'プールで泳ぐキリン',           keywords: [['プール','ぷーる'],['キリン','きりん']] },
+  { phrase: 'スノーボードするカニ',         keywords: [['スノーボード','スノボ','すのーぼーど'],['カニ','かに']] },
+  { phrase: 'バレエを踊るブタ',             keywords: [['バレエ','ばれえ'],['ブタ','ぶた']] },
+  { phrase: '花火を見るクジラ',             keywords: [['花火','はなび'],['クジラ','くじら']] },
+  { phrase: '将棋をさすペンギン',           keywords: [['将棋','しょうぎ'],['ペンギン','ぺんぎん']] },
+  { phrase: '縄跳びするフラミンゴ',         keywords: [['縄跳び','なわとび'],['フラミンゴ','ふらみんご']] },
+  // ── 奇抜（7割）！「どうやって描くんだ！」系 ──
+  { phrase: 'サバゲーをするちいかわ',       keywords: [['サバゲー','さばげー','サバゲ'],['ちいかわ']] },
+  { phrase: '飛行機に乗る恐竜',             keywords: [['飛行機','ひこうき'],['恐竜','きょうりゅう']] },
+  { phrase: '歯医者に行くワニ',             keywords: [['歯医者','はいしゃ','歯科'],['ワニ','わに']] },
+  { phrase: '確定申告するカバ',             keywords: [['確定申告','しんこく','かくていしんこく'],['カバ','かば']] },
+  { phrase: '美容院に来たライオン',         keywords: [['美容院','びよういん','美容室','美容'],['ライオン','らいおん']] },
+  { phrase: '電話中のゾウ',                 keywords: [['電話','でんわ'],['ゾウ','ぞう']] },
+  { phrase: '水中でラーメンを食べるシャチ', keywords: [['ラーメン','らーめん'],['シャチ','しゃち']] },
+  { phrase: 'カラオケで熱唱するサメ',       keywords: [['カラオケ','からおけ'],['サメ','さめ']] },
+  { phrase: '面接を受けるシマウマ',         keywords: [['面接','めんせつ'],['シマウマ','しまうま']] },
+  { phrase: '居酒屋で飲むオオカミ',         keywords: [['居酒屋','いざかや'],['オオカミ','おおかみ']] },
+  { phrase: '深夜コンビニにいるチーター',   keywords: [['コンビニ','こんびに'],['チーター','ちーたー']] },
+  { phrase: '国会で演説するコアラ',         keywords: [['演説','えんぜつ','国会','こっかい'],['コアラ','こあら']] },
+  { phrase: '宝くじを当てたカメ',           keywords: [['宝くじ','たからくじ','宝'],['カメ','かめ']] },
+  { phrase: 'ヨガをするラクダ',             keywords: [['ヨガ','よが'],['ラクダ','らくだ']] },
+  { phrase: 'テレビショッピングするトラ',   keywords: [['テレビショッピング','テレビ','通販','つうはん'],['トラ','とら']] },
+  { phrase: '給食を配るフクロウ',           keywords: [['給食','きゅうしょく'],['フクロウ','ふくろう']] },
+  { phrase: 'ディスコで踊るウミガメ',       keywords: [['ディスコ','でぃすこ'],['ウミガメ','うみがめ']] },
+  { phrase: '自撮りするクジャク',           keywords: [['自撮り','じどり','セルフィー'],['クジャク','くじゃく']] },
+  { phrase: '引越し中のハムスター',         keywords: [['引越し','ひっこし'],['ハムスター','はむすたー']] },
+  { phrase: 'スマホを使うイルカ',           keywords: [['スマホ','スマートフォン'],['イルカ','いるか']] },
+  { phrase: '縁日でゲームするキツネ',       keywords: [['縁日','えんにち','お祭り','まつり'],['キツネ','きつね']] },
+  { phrase: '雪山で遭難するトカゲ',         keywords: [['雪山','ゆきやま','遭難','そうなん'],['トカゲ','とかげ']] },
+  { phrase: 'キャンプするタコ',             keywords: [['キャンプ','きゃんぷ','テント'],['タコ','たこ']] },
+  { phrase: '徹夜で論文を書くリス',         keywords: [['論文','ろんぶん','徹夜','てつや'],['リス','りす']] },
+  { phrase: 'タクシーを呼ぶヒツジ',         keywords: [['タクシー','たくしー'],['ヒツジ','ひつじ']] },
+  { phrase: '合コンに来たサイ',             keywords: [['合コン','ごうこん'],['サイ','さい']] },
+  { phrase: '新幹線で寝るヤギ',             keywords: [['新幹線','しんかんせん'],['ヤギ','やぎ']] },
+  { phrase: '折り紙を折るコウモリ',         keywords: [['折り紙','おりがみ'],['コウモリ','こうもり']] },
+];
+
+// =====================================
+// お題リスト
 // =====================================
 const wordLists = {
-  'どうぶつ': ['ゾウ','ペンギン','クマ','キリン','ライオン','サル','うさぎ','カメ','タヌキ','キツネ','パンダ','トラ','ネコ','イヌ','ウマ','ヒツジ','ブタ','ニワトリ','コアラ','カンガルー','ゴリラ','シマウマ','チーター','オオカミ','ハムスター','カバ','サイ','ワニ','フラミンゴ','フクロウ','コウモリ','カワウソ','リス','ハリネズミ','トカゲ','カエル','ヘビ','クジャク','ラクダ','ヤギ'],
+  // どうぶつ＋うみのなかまを統合（C案）
+  'どうぶつ': ['ゾウ','ペンギン','クマ','キリン','ライオン','サル','うさぎ','カメ','タヌキ','キツネ','パンダ','トラ','ネコ','イヌ','ウマ','ヒツジ','ブタ','ニワトリ','コアラ','カンガルー','ゴリラ','シマウマ','チーター','オオカミ','ハムスター','カバ','サイ','ワニ','フラミンゴ','フクロウ','コウモリ','カワウソ','リス','ハリネズミ','トカゲ','カエル','ヘビ','クジャク','ラクダ','ヤギ','タコ','サメ','にんぎょ','クラゲ','イルカ','ウミガメ','カニ','エビ','フグ','ヒトデ','タツノオトシゴ','クジラ','マンタ','ラッコ','アザラシ','サンゴ','ウナギ','チンアナゴ','ナマコ','カキ','タイ','マグロ','ヒラメ','イカ','ウニ','ホタテ','アワビ','ヤドカリ','アンコウ','セイウチ','ジュゴン','シーラカンス','ハンマーヘッド','サバ','カレイ','シャチ','ウミヘビ','アシカ','カツオ','イワシ'],
   'たべもの': ['ラーメン','ピザ','イチゴ','おにぎり','ケーキ','すし','カレー','たこやき','アイスクリーム','バナナ','リンゴ','ハンバーガー','チョコレート','ミカン','うどん','やきとり','プリン','ドーナツ','ポテト','ラムネ','たいやき','やきそば','チャーハン','パスタ','エビフライ','からあげ','メロン','スイカ','クレープ','まんじゅう','だんご','わたがし','おでん','みそしる','コロッケ','かき氷','ホットケーキ','ステーキ','サンドイッチ','グミ'],
   'のりもの': ['バス','ロケット','じてんしゃ','でんしゃ','ひこうき','せんすいかん','ヘリコプター','ボート','トラック','オートバイ','タクシー','しんかんせん','ヨット','きゅうきゅうしゃ','しょうぼうしゃ','くるま','ふね','スケートボード','UFO','リムジン','トラクター','パトカー','スクーター','モノレール','ケーブルカー','カヌー','ジェットスキー','ききゅう','グライダー','ドローン','じんりきしゃ','ゴンドラ','ダンプカー','ロードバイク','キックボード','フェリー','リニアモーターカー','ちかてつ','ばしゃ','そり'],
   'スポーツ': ['サッカー','すいえい','すもう','テニス','やきゅう','スキー','ボクシング','ゴルフ','バレーボール','マラソン','じゅうどう','バスケットボール','たいそう','サーフィン','スケート','バドミントン','ピンポン','ラグビー','アーチェリー','ボウリング','なわとび','ドッジボール','フットサル','フィギュアスケート','スノーボード','クライミング','フェンシング','レスリング','ハンドボール','ホッケー','カーリング','ダーツ','ビリヤード','けんどう','きゅうどう','からて','チアリーディング','ローラースケート','パルクール','スケートボード'],
@@ -35,7 +87,7 @@ const wordLists = {
   'きもち': ['おこり','おどろき','はずかしい','かなしい','うれしい','こわい','ねむい','たのしい','さびしい','あせる','あきれる','わくわく','どきどき','ほっとする','なく','わらう','しんぱい','つかれる','はらがたつ','おどろく','くやしい','にやにや','ぼーっとする','がっかり','きんちょう','こうふん','まんぞく','ほこらしい','てれる','むかつく','はっとする','こうかい','ドン引き','ため息','なつかしい','ゆううつ','きもちわるい','すっきり','もやもや','ぞっとする'],
   'エンタメ': ['ギター','えいが','おまつり','まんが','ゲーム','おんがく','ダンス','マジック','サーカス','えんげき','カメラ','テレビ','ピアノ','えほん','はなび','カラオケ','バンド','アニメ','アイドル','よさこい','ドラム','バイオリン','コンサート','トランプ','ジェンガ','ボードゲーム','コスプレ','ハロウィン','クリスマス','しゃしん','ラジオ','YouTuber','なぞなぞ','かるた','すごろく','オーケストラ','バレエ','ミュージカル','ゲームはいしん','フラダンス'],
   'なつかしい': ['ファミコン','くろでんわ','かみしばい','ちょうちん','こま','めんこ','そろばん','ゆかた','たけとんぼ','ふろしき','でんでんだいこ','おてだま','ガラスびん','せんたくいた','いろり','がまぐち','ふみきり','ちんどんや','あんどん','よーよー','けんだま','べいごま','おはじき','しょうぎ','たこ','ふうりん','きんぎょすくい','ぼんおどり','みこし','やぐら','ひなにんぎょう','こいのぼり','せんとう','はっぴ','すだれ','たらい','でんしゃのつり革','ランドセル','ちゃぶだい','がっこうのきゅうしょく'],
-  'うみのなかま': ['タコ','サメ','にんぎょ','クラゲ','イルカ','ウミガメ','カニ','エビ','フグ','ヒトデ','タツノオトシゴ','クジラ','マンタ','ラッコ','アザラシ','サンゴ','ウナギ','チンアナゴ','ナマコ','カキ','タイ','マグロ','ヒラメ','イカ','ウニ','ホタテ','アワビ','ヤドカリ','アンコウ','セイウチ','ジュゴン','シーラカンス','ハンマーヘッド','サバ','カレイ','シャチ','ウミヘビ','アシカ','カツオ','イワシ'],
+  'くみあわせ': comboWords.map(c => c.phrase),
   'キャラクター': ['ちいかわ','おぱんちゅうさぎ','ハローキティ','ドラえもん','ピカチュウ','ミッキーマウス','アンパンマン','トトロ','クレヨンしんちゃん','スヌーピー','ミニオン','くまのプーさん','マリオ','カービィ','すみっコぐらし','リラックマ','ムーミン','ゴジラ','スライム','ウルトラマン','仮面ライダー','ちびまる子ちゃん','バイキンマン','ドラミちゃん','ピングー','ポムポムプリン','シナモロール','マイメロディ','コナン','孫悟空','ルフィ','ナルト','パックマン','ドンキーコング','ソニック','チョッパー','ピクミン','トーマス','きかんしゃトーマス','ガンダム'],
 };
 
@@ -43,6 +95,8 @@ const wordLists = {
 // ルーム管理
 // =====================================
 const rooms = {};
+// 一時切断したプレイヤーの削除タイマー（30秒以内なら再参加できる）
+const disconnectTimers = {};
 
 function generateRoomCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -234,10 +288,20 @@ function checkAnswer(guess, correct) {
   const normalize = (s) => toKatakana(s.trim().toLowerCase()).replace(/\s/g, '');
   const g = normalize(guess);
   const c = normalize(correct);
-  // 正解ワード同士のチェック：完全一致 or どちらかが相手を含む
+
+  // くみあわせお題：各グループ内はOR、グループ間はAND
+  // 例「確定申告するカバ」→ ['確定申告','かくていしんこく']のどちらか AND ['カバ','かば']のどちらか
+  const combo = comboWords.find(cw => normalize(cw.phrase) === c);
+  if (combo) {
+    return combo.keywords.every(kwGroup => {
+      const variants = Array.isArray(kwGroup) ? kwGroup : [kwGroup];
+      return variants.some(v => g.includes(normalize(v)));
+    });
+  }
+
+  // 通常お題：完全一致 or どちらかが相手を含む
   if (g === c || g.includes(c) || c.includes(g)) return true;
-  // エイリアスのチェック：完全一致 or guessがaliasを含む のみ
-  // （alias.includes(guess) は「海星」に「星」が含まれるような誤判定を防ぐため除外）
+  // エイリアス：完全一致 or guessがaliasを含む のみ
   const aliases = wordAliases[correct] || [];
   for (const alias of aliases) {
     const a = normalize(alias);
@@ -284,12 +348,12 @@ function createRoom(hostId, hostName) {
   rooms[code] = {
     code, hostId,
     players: [{ id: hostId, name: hostName, score: 0 }],
-    gameStarted: false, difficulty: 'normal', totalRounds: 5, drawTime: 0,
+    gameStarted: false, difficulty: 'normal', totalRounds: 5, drawTime: 0, comboOnly: false,
     currentRound: 0, currentDrawerIndex: 0, currentWord: null, currentCategory: null,
     phase: 'lobby', canvasData: null, aiGuess: null, aiCorrect: false,
     humanGuesses: [], roundWinner: null,
     allDrawings: [],    // ギャラリー
-    usedWords: {},      // 使用済みお題 ⑥
+    usedWords: {},      // 使用済みお題
   };
   return rooms[code];
 }
@@ -329,7 +393,7 @@ io.on('connection', (socket) => {
     socket.to(code).emit('player_updated', { players: room.players });
   });
 
-  socket.on('start_game', ({ difficulty, totalRounds, drawTime }) => {
+  socket.on('start_game', ({ difficulty, totalRounds, drawTime, comboOnly }) => {
     const room = getRoom(socket.roomCode);
     if (!room || room.hostId !== socket.id) return;
     if (room.players.length < 2) { socket.emit('error', { message: '2人以上必要です！' }); return; }
@@ -337,6 +401,7 @@ io.on('connection', (socket) => {
     room.difficulty = difficulty || 'normal';
     room.totalRounds = parseInt(totalRounds) || 5;
     room.drawTime = parseInt(drawTime) || 0;
+    room.comboOnly = !!comboOnly;
     room.currentRound = 0; room.currentDrawerIndex = 0;
     room.allDrawings = []; room.usedWords = {};
     room.players.forEach(p => p.score = 0);
@@ -484,13 +549,42 @@ io.on('connection', (socket) => {
     startNextRound(room);
   });
 
+  // =====================================
+  // 再参加（ゲーム中に切断しても戻れる）
+  // =====================================
+  socket.on('rejoin_room', ({ roomCode, playerName }) => {
+    const code = (roomCode || '').toUpperCase().trim();
+    const room = getRoom(code);
+    if (!room) { socket.emit('error', { message: 'ルームが見つかりません。ゲームが終了したかもしれません。' }); return; }
+    const existing = room.players.find(p => p.name === playerName);
+    if (!existing) { socket.emit('error', { message: 'このルームに同じ名前のプレイヤーが見つかりません。' }); return; }
+    // 切断タイマーをキャンセル
+    if (disconnectTimers[existing.id]) { clearTimeout(disconnectTimers[existing.id]); delete disconnectTimers[existing.id]; }
+    const wasHost = room.hostId === existing.id;
+    existing.id = socket.id;
+    if (wasHost) room.hostId = socket.id;
+    socket.join(code); socket.roomCode = code;
+    socket.emit('rejoined', {
+      roomCode: code, players: room.players, isHost: wasHost,
+      phase: room.phase, currentRound: room.currentRound, totalRounds: room.totalRounds,
+      drawerId: room.players[room.currentDrawerIndex]?.id,
+      drawerName: room.players[room.currentDrawerIndex]?.name,
+      canvasData: room.canvasData,
+      comboOnly: room.comboOnly,
+    });
+    io.to(code).emit('player_updated', { players: room.players });
+  });
+
   socket.on('disconnect', () => {
     const code = socket.roomCode;
     if (!code) return;
-    // 音声接続も切断
     io.to(code).emit('voice_peer_left', { peerId: socket.id });
-    const room = removePlayer(code, socket.id);
-    if (room) io.to(code).emit('player_updated', { players: room.players });
+    // 30秒以内に再参加しなければプレイヤーを削除
+    disconnectTimers[socket.id] = setTimeout(() => {
+      const room = removePlayer(code, socket.id);
+      if (room) io.to(code).emit('player_updated', { players: room.players });
+      delete disconnectTimers[socket.id];
+    }, 30000);
   });
 });
 
@@ -503,11 +597,36 @@ function startNextRound(room) {
   room.aiGuess = null; room.aiCorrect = false;
   room.humanGuesses = []; room.roundWinner = null;
   const drawer = room.players[room.currentDrawerIndex];
-  io.to(room.code).emit('round_started', {
-    round: room.currentRound, totalRounds: room.totalRounds,
-    drawerName: drawer.name, drawerId: drawer.id,
-    categories: Object.keys(wordLists),
-  });
+
+  if (room.comboOnly) {
+    // くみあわせのみモード：カテゴリ選択スキップ、自動でお題を選ぶ
+    const category = 'くみあわせ';
+    const used = room.usedWords[category] || [];
+    const available = wordLists[category].filter(w => !used.includes(w));
+    const pool = available.length > 0 ? available : wordLists[category];
+    const word = pool[Math.floor(Math.random() * pool.length)];
+    if (!room.usedWords[category]) room.usedWords[category] = [];
+    room.usedWords[category].push(word);
+    room.currentWord = word; room.currentCategory = category; room.phase = 'drawing';
+    io.to(room.code).emit('round_started', {
+      round: room.currentRound, totalRounds: room.totalRounds,
+      drawerName: drawer.name, drawerId: drawer.id, comboOnly: true,
+    });
+    // 2秒後に描画フェーズへ
+    setTimeout(() => {
+      io.to(room.code).emit('drawing_phase', { drawerName: drawer.name, drawTime: room.drawTime });
+      io.to(drawer.id).emit('start_drawing', { word, category, drawTime: room.drawTime,
+        round: room.currentRound, totalRounds: room.totalRounds });
+    }, 2000);
+  } else {
+    // 通常モード：カテゴリ選択あり（くみあわせカテゴリは除外）
+    const availableCategories = Object.keys(wordLists).filter(k => k !== 'くみあわせ');
+    io.to(room.code).emit('round_started', {
+      round: room.currentRound, totalRounds: room.totalRounds,
+      drawerName: drawer.name, drawerId: drawer.id,
+      categories: availableCategories, comboOnly: false,
+    });
+  }
 }
 
 function endRound(room, winner, winnerId = null) {
