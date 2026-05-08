@@ -597,7 +597,12 @@ socket.on('ai_guessing', ({ difficulty }) => {
 });
 
 socket.on('ai_result', ({ guess, correct }) => {
-  document.getElementById('ai-answer-text').textContent = `「${guess}」`;
+  // 「わからない」判定：空・null・解析失敗ワードを含む場合
+  const unknownWords = ['わかりません','わからない','判断できません','判断できない','不明','できません','エラーが発生しました'];
+  const isUnknown = !guess || guess.trim() === '' || unknownWords.some(w => guess.includes(w));
+  const displayGuess = isUnknown ? 'わからない' : guess;
+
+  document.getElementById('ai-answer-text').textContent = `「${displayGuess}」`;
   const verdict = document.getElementById('ai-verdict');
   const eyeL = document.getElementById('result-eye-left');
   const eyeR = document.getElementById('result-eye-right');
@@ -615,7 +620,6 @@ socket.on('ai_result', ({ guess, correct }) => {
     soundAIWin();
   } else {
     verdict.textContent = '🎉 不正解！人間の番だ！'; verdict.className = 'ai-verdict wrong';
-    // ① 悔しい顔
     if (eyeL) { eyeL.className = 'ai-eye left frustrated'; eyeR.className = 'ai-eye right frustrated'; }
     if (mouth) mouth.className = 'ai-mouth frustrated';
     if (monologue) { monologue.textContent = wrongPhrases[Math.floor(Math.random()*wrongPhrases.length)]; monologue.classList.remove('hidden'); }

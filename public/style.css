@@ -43,6 +43,8 @@ body {
     );
   color: var(--navy);
   min-height: 100vh;
+  /* スマホのURL欄・ノッチ対応 */
+  padding-top: env(safe-area-inset-top, 0);
 }
 
 /* =====================================
@@ -52,6 +54,7 @@ body {
   display: none;
   width: 100%;
   height: 100vh;
+  height: 100dvh; /* スマホのURL欄を動的に考慮 */
   overflow-y: auto;
   padding: 20px;
 }
